@@ -231,6 +231,85 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.onmouseout  = () => { btn.style.borderColor='var(--border)';  btn.style.color='var(--text-secondary)'; };
     btn.onclick = window.openGLBModal;
     toolbar3D.prepend(btn);
+
+    // ─── PALETA DE HERRAMIENTAS HMI / 3D ────────────────────────
+    if (!document.getElementById('hmiToolsGroup')) {
+      const group = document.createElement('div');
+      group.id = 'hmiToolsGroup';
+      group.style.cssText = 'display:flex;align-items:center;gap:4px;margin-right:8px;padding:2px 6px;border:1px solid var(--border-default);border-radius:6px;background:rgba(255,255,255,0.02)';
+
+      const mkBtn = (title, html, onClick) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.title = title;
+        b.innerHTML = html;
+        b.style.cssText = 'border:none;background:transparent;color:var(--text-secondary);font-size:13px;padding:4px 8px;line-height:1;cursor:pointer;border-radius:4px';
+        b.onmouseenter = () => b.style.background = 'rgba(255,255,255,0.06)';
+        b.onmouseleave = () => b.style.background = 'transparent';
+        b.onclick = onClick;
+        return b;
+      };
+
+      const cam = () => window.threeCamera;
+      const ctrls = () => window.threeControls;
+
+      // Zoom in/out (acerca/aleja la cámara hacia su target)
+      const zoom = (factor) => {
+        const c = cam(); const k = ctrls();
+        if (!c) return;
+        const target = k?.target || new THREE.Vector3(0,0,0);
+        const dir = c.position.clone().sub(target);
+        dir.multiplyScalar(factor);
+        c.position.copy(target.clone().add(dir));
+        k?.update?.();
+      };
+      group.appendChild(mkBtn('Acercar', '🔍+', () => zoom(1/1.2)));
+      group.appendChild(mkBtn('Alejar',  '🔍−', () => zoom(1.2)));
+      group.appendChild(mkBtn('Reset cámara', '⛶', () => window.resetCamera?.()));
+
+      // Rotar el modelo 90° (si hay modelo cargado), si no rota la cámara
+      group.appendChild(mkBtn('Rotar 90° antihorario', '⟲', () => {
+        const m = window._3dCurrentModel;
+        if (m) { m.rotation.y -= Math.PI/2; }
+        else if (cam()) { cam().position.applyAxisAngle(new THREE.Vector3(0,1,0), -Math.PI/2); ctrls()?.update?.(); }
+      }));
+      group.appendChild(mkBtn('Rotar 90° horario', '⟳', () => {
+        const m = window._3dCurrentModel;
+        if (m) { m.rotation.y += Math.PI/2; }
+        else if (cam()) { cam().position.applyAxisAngle(new THREE.Vector3(0,1,0), Math.PI/2); ctrls()?.update?.(); }
+      }));
+
+      // Separador
+      const sep = document.createElement('span');
+      sep.style.cssText = 'width:1px;height:18px;background:var(--border-default);margin:0 4px';
+      group.appendChild(sep);
+
+      // Captura de pantalla
+      group.appendChild(mkBtn('Captura PNG', '📷', () => {
+        const canvas = document.getElementById('three-canvas');
+        if (!canvas) return;
+        try {
+          // Forzar render antes de capturar
+          if (window.threeRenderer && window.threeScene && cam()) {
+            window.threeRenderer.render(window.threeScene, cam());
+          }
+          const url = canvas.toDataURL('image/png');
+          const a = document.createElement('a');
+          a.href = url; a.download = 'hmi-3d-' + Date.now() + '.png';
+          document.body.appendChild(a); a.click(); a.remove();
+        } catch (e) { window.showNotif?.('Error al capturar: ' + e.message, 'danger'); }
+      }));
+
+      // Pantalla completa (panel completo, incluyendo toolbar)
+      group.appendChild(mkBtn('Pantalla completa', '⛶⛶', () => {
+        const panel = toolbar3D.closest('.panel') || toolbar3D.parentElement;
+        if (!panel) return;
+        if (document.fullscreenElement) document.exitFullscreen();
+        else panel.requestFullscreen?.();
+      }));
+
+      toolbar3D.appendChild(group);
+    }
   }
 
   // Auto-cargar último modelo cuando el tab 3D se hace visible

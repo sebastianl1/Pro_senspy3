@@ -1,0 +1,13 @@
+{
+  "name": "nexscada-preview",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 8080",
+    "build": "rm -rf dist && mkdir -p dist && cp -r SCADA/index.html SCADA/js SCADA/css SCADA/Acceso_seguro SCADA/assets dist/ 2>/dev/null; cp -r SCADA/*.ico SCADA/*.png SCADA/*.svg dist/ 2>/dev/null; V=$(date +%s); sed -i.bak -E \"s/(\\.(js|css))(\\\"|')/\\1?v=$V\\3/g\" dist/index.html && rm -f dist/index.html.bak; true",
+    "preview": "vite preview --host 0.0.0.0 --port 8080"
+  },
+  "devDependencies": {
+    "vite": "^5.4.10"
+  }
+}

@@ -1,0 +1,1544 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scada GRUPO_3 — Industrial Control System</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.1/feather.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=Rajdhani:wght@500;600;700&display=swap"
+    rel="stylesheet">
+  <!-- Estilos propios del SCADA (cargados directamente) -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/scada-core.css">
+  <!-- Login modal — lightweight responsive styles -->
+  <style>
+    #loginModal { position:fixed; inset:0; z-index:9999; display:grid; grid-template-columns:1fr; font-family:'Inter',sans-serif; background:#0d1117; }
+    #loginModal .login-bg-panel { display:none; position:relative; overflow:hidden; min-width:0; }
+    #loginModal .login-form-panel { display:flex; align-items:center; justify-content:center; background:#0d1117; padding:24px; min-width:0; overflow-y:auto; }
+    #loginModal .login-form-inner { width:100%; max-width:400px; }
+    @media (min-width: 900px) {
+      #loginModal { grid-template-columns:1.2fr 1fr; }
+      #loginModal .login-bg-panel { display:block; }
+      #loginModal .login-mobile-brand { display:none; }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- LOGIN MODAL — SENA branded split-screen -->
+  <div id="loginModal">
+
+    <!-- Left: SENA brand + background image (desktop only) -->
+    <div class="login-bg-panel">
+      <img src="assets/sena2.jpg.jpeg" loading="eager" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" alt="">
+      <div style="position:absolute;inset:0;background:linear-gradient(160deg,rgba(16,185,129,0.70) 0%,rgba(5,150,105,0.78) 60%,rgba(4,120,87,0.85) 100%)"></div>
+      <div style="position:relative;z-index:1;width:100%;height:100%;padding:60px 50px;display:flex;flex-direction:column;justify-content:center;color:#fff;box-sizing:border-box">
+        <img src="assets/sena3.webp?v=3" alt="SENA" style="width:120px;height:120px;object-fit:cover;object-position:center;display:block;margin:0 0 28px;padding:0;background:#ffffff;border-radius:20px;box-shadow:0 8px 32px rgba(0,0,0,0.25)">
+        <h1 style="font-size:46px;font-weight:800;margin:0 0 10px;line-height:1.05;letter-spacing:-0.5px">SENA</h1>
+        <p style="font-size:18px;font-weight:500;margin:0 0 20px;opacity:0.92">Servicio Nacional de Aprendizaje</p>
+        <div style="width:48px;height:3px;background:rgba(255,255,255,0.55);border-radius:2px"></div>
+
+        <div style="margin-top:auto;opacity:0.9;font-size:13px;line-height:1.7">
+          <p style="margin:0 0 6px;font-weight:600;letter-spacing:0.05em">SISTEMA DE CONTROL INDUSTRIAL</p>
+          <p style="margin:0 0 14px;opacity:0.8">SCADA SPy v1.0 — Monitoreo y supervisión de procesos industriales en tiempo real.</p>
+          <p style="margin:0;opacity:0.65;font-size:11px">Proyecto de formación tecnológica · Grupo 3</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Login form -->
+    <div class="login-form-panel">
+      <div class="login-form-inner">
+
+        <!-- Mobile SENA branding -->
+        <div class="login-mobile-brand" style="text-align:center;margin-bottom:28px">
+        <img src="assets/sena3.webp?v=3" alt="SENA" style="width:96px;height:96px;object-fit:cover;object-position:center;display:block;margin:0 auto 14px;padding:0;background:#ffffff;border-radius:16px;box-shadow:0 4px 20px rgba(0,166,81,0.3)">
+          <h2 style="font-size:20px;font-weight:700;color:#e2e8f0;margin:0 0 3px">SENA</h2>
+          <p style="font-size:12px;color:#64748b;margin:0">Servicio Nacional de Aprendizaje</p>
+        </div>
+
+        <h3 style="font-size:28px;font-weight:700;color:#e2e8f0;margin:0 0 8px">Bienvenido</h3>
+        <p style="font-size:13px;color:#7e879b;margin:0 0 28px">Ingresa tus credenciales para acceder al sistema SCADA</p>
+
+        <div style="background:#161b27;border:1px solid rgba(255,255,255,0.08);border-radius:14px;overflow:hidden;margin-bottom:14px">
+          <div style="display:flex;align-items:center;border-bottom:1px solid rgba(255,255,255,0.08);padding:0 14px;gap:10px">
+            <i data-feather="user" style="width:15px;height:15px;color:#64748b;flex-shrink:0"></i>
+            <input type="text" id="loginUser" placeholder="Usuario"
+              style="flex:1;background:transparent;border:none;outline:none;padding:15px 0;font-size:14px;color:#e2e8f0;font-family:'Inter',sans-serif;caret-color:#00A651;min-width:0">
+          </div>
+          <div style="display:flex;align-items:center;padding:0 14px;gap:10px">
+            <i data-feather="lock" style="width:15px;height:15px;color:#64748b;flex-shrink:0"></i>
+            <input type="password" id="loginPass" placeholder="Contraseña"
+              style="flex:1;background:transparent;border:none;outline:none;padding:15px 0;font-size:14px;color:#e2e8f0;font-family:'Inter',sans-serif;caret-color:#00A651;min-width:0">
+            <button type="button" id="togglePassword"
+              onclick="(function(){const p=document.getElementById('loginPass');const show=p.type==='password';p.type=show?'text':'password';const ic=document.getElementById('eyeIcon');ic.setAttribute('data-feather',show?'eye-off':'eye');feather.replace();})()"
+              style="background:none;border:none;padding:4px;cursor:pointer;color:#64748b;display:flex;align-items:center;flex-shrink:0;transition:color 0.15s"
+              onmouseover="this.style.color='#e2e8f0'" onmouseout="this.style.color='#64748b'">
+              <i data-feather="eye" id="eyeIcon" style="width:15px;height:15px;pointer-events:none"></i>
+            </button>
+          </div>
+        </div>
+
+        <button onclick="doLogin()"
+          style="width:100%;padding:14px;background:linear-gradient(135deg,#00A651,#008f45);border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;letter-spacing:0.04em;transition:all 0.2s;box-shadow:0 4px 20px rgba(0,166,81,0.3)"
+          onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 24px rgba(0,166,81,0.45)'"
+          onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 20px rgba(0,166,81,0.3)'">
+          <i data-feather="log-in" style="width:16px;height:16px;pointer-events:none"></i>
+          <span data-i18n="login.btn">INICIAR SESIÓN</span>
+        </button>
+
+        <p style="text-align:center;margin-top:22px;font-size:11px;color:#64748b;letter-spacing:0.02em">
+          Sistema de Control Industrial SPy v1.0 · Grupo 3
+        </p>
+      </div>
+    </div>
+
+    <select id="loginPlant" style="display:none">
+      <option>PLANTA_01 — Refinería Norte</option>
+      <option>PLANTA_02 — Subestación Central</option>
+      <option>PLANTA_03 — Agua Potable Sur</option>
+    </select>
+  </div>
+
+  <!-- WRAPPER -->
+  <div class="wrapper">
+    <!-- SIDEBAR -->
+    <nav id="sidebar" class="sidebar">
+      <div class="sidebar-content">
+        <a class="sidebar-brand" href="#" style="display:flex; align-items:center; gap:10px; padding:15px 20px;">
+          <div style="width:24px;height:24px;background:linear-gradient(135deg,var(--primary,#638bff),#a78bfa);border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;color:#fff;font-family:'Rajdhani',sans-serif;">S</div>
+          <span class="sidebar-brand-text"><strong>Syp</strong> Pro</span>
+        </a>
+        <div class="sidebar-connections">
+          <div class="conn-row">
+            <div class="conn-dot" style="background:var(--success)"></div><span class="conn-label">MODBUS</span><span
+              class="conn-status" style="color:var(--success)">OK</span>
+          </div>
+          <div class="conn-row">
+            <div class="conn-dot" style="background:var(--success)"></div><span class="conn-label">OPC-UA</span><span
+              class="conn-status" style="color:var(--success)">OK</span>
+          </div>
+          <div class="conn-row">
+            <div class="conn-dot" style="background:var(--success)"></div><span class="conn-label">MQTT</span><span
+              class="conn-status" style="color:var(--success)">OK</span>
+          </div>
+          <div class="conn-row">
+            <div class="conn-dot" style="background:var(--danger)"></div><span class="conn-label">PLC-04</span><span
+              class="conn-status" style="color:var(--danger)">ERR</span>
+          </div>
+        </div>
+        <ul class="sidebar-nav">
+          <li class="sidebar-header" data-i18n="nav.supervision">SUPERVISIÓN</li>
+          <li class="sidebar-item active" data-tab="dashboard"><a class="sidebar-link" href="#"
+              onclick="showTab('dashboard')"><i data-feather="monitor"></i><span
+                data-i18n="nav.dashboard">Dashboard</span><span class="sidebar-badge badge bg-primary rounded-pill"
+                style="font-size:9px">LIVE</span></a></li>
+          <li class="sidebar-item" data-tab="process"><a class="sidebar-link" href="#" onclick="showTab('process')"><i
+                data-feather="activity"></i><span data-i18n="nav.process">Proceso P&ID</span></a></li>
+          <li class="sidebar-item" data-tab="3d"><a class="sidebar-link" href="#" onclick="showTab('3d')"><i
+                data-feather="box"></i><span data-i18n="nav.3d">HMI</span></a></li>
+          <li class="sidebar-header" data-i18n="nav.alerts">ALERTAS & DATOS</li>
+          <li class="sidebar-item" data-tab="alarms"><a class="sidebar-link" href="#" onclick="showTab('alarms')"><i
+                data-feather="alert-triangle"></i><span data-i18n="nav.alarms">Alarmas</span><span
+                class="sidebar-badge badge bg-danger rounded-pill" id="sidebarAlarmBadge">7</span></a></li>
+          <li class="sidebar-item" data-tab="historics"><a class="sidebar-link" href="#"
+              onclick="showTab('historics')"><i data-feather="trending-up"></i><span
+                data-i18n="nav.historics">Históricos</span></a></li>
+          <li class="sidebar-header" data-i18n="nav.visualization">VISUALIZACIÓN</li>
+          <li class="sidebar-item" data-tab="calendar"><a class="sidebar-link" href="#" onclick="showTab('calendar')"><i
+                data-feather="calendar"></i><span data-i18n="nav.calendar">Calendario</span></a></li>
+          <li class="sidebar-header" data-i18n="nav.intelligence">INTELIGENCIA</li>
+          <li class="sidebar-item" data-tab="ai"><a class="sidebar-link" href="#" onclick="showTab('ai')"><i
+                data-feather="cpu"></i><span data-i18n="nav.ai">IA & Predicción</span></a></li>
+          <li class="sidebar-header" data-i18n="nav.admin">ADMINISTRACIÓN</li>
+          <li class="sidebar-item" data-tab="config"><a class="sidebar-link" href="#" onclick="showTab('config')"><i
+                data-feather="settings"></i><span data-i18n="nav.config">Configuración</span></a></li>
+          <li class="sidebar-item" data-tab="notifications"><a class="sidebar-link" href="#"
+              onclick="showTab('notifications')"><i data-feather="message-square"></i><span
+                data-i18n="nav.notifications">Notificaciones</span></a></li>
+          <li class="sidebar-item" data-tab="files"><a class="sidebar-link" href="#" onclick="showTab('files')"><i
+                data-feather="folder"></i><span data-i18n="nav.files">Archivos</span></a></li>
+          <li class="sidebar-item" data-tab="docs"><a class="sidebar-link" href="#" onclick="showTab('docs')"><i
+                data-feather="book-open"></i><span data-i18n="nav.docs">Documentación</span></a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- MAIN -->
+    <div class="main-wrap" id="mainDiv">
+      <!-- TOPBAR -->
+      <header class="topbar">
+        <button class="hamburger-btn js-sidebar-toggle"><i class="hamburger"></i></button>
+        <div class="topbar-page-info d-none d-sm-block">
+          <span class="topbar-page-title" id="pageTitle" data-i18n="page.dashboard">Dashboard Principal</span>
+          <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0" id="breadcrumb">
+              <li class="breadcrumb-item"><a href="#">Scada</a></li>
+              <li class="breadcrumb-item active" data-i18n="bc.dashboard">Dashboard</li>
+            </ol>
+          </nav>
+        </div>
+        <div class="topbar-search d-none d-md-block">
+          <i data-feather="search" class="search-icon"></i>
+          <input type="text" id="searchInput" placeholder="Buscar tags, alarmas..."
+            data-i18n-placeholder="search.placeholder">
+        </div>
+        <div class="topbar-right">
+          <div class="dropdown">
+            <button class="topbar-btn" data-bs-toggle="dropdown"><span class="status-dot online"></span></button>
+            <div class="dropdown-menu dropdown-menu-end" style="width:260px;background:var(--bg-card2,#1c2333);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.5);padding:6px;overflow:hidden">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);padding:10px 12px 8px;border-bottom:1px solid var(--border,rgba(255,255,255,0.08));margin-bottom:4px" data-i18n="top.connections">CONEXIONES</div>
+              <div style="padding:8px 6px;display:flex;flex-direction:column;gap:2px">
+                <div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px">
+                  <div style="width:7px;height:7px;border-radius:50%;background:var(--success,#34d399);box-shadow:0 0 6px var(--success,#34d399);flex-shrink:0"></div>
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-primary,#e2e8f0)">MODBUS TCP — 192.168.1.100</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px">
+                  <div style="width:7px;height:7px;border-radius:50%;background:var(--success,#34d399);box-shadow:0 0 6px var(--success,#34d399);flex-shrink:0"></div>
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-primary,#e2e8f0)">OPC-UA — opc.tcp://plc01</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px">
+                  <div style="width:7px;height:7px;border-radius:50%;background:var(--success,#34d399);box-shadow:0 0 6px var(--success,#34d399);flex-shrink:0"></div>
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-primary,#e2e8f0)">MQTT — broker:8883</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px">
+                  <div style="width:7px;height:7px;border-radius:50%;background:var(--danger,#f87171);box-shadow:0 0 6px var(--danger,#f87171);flex-shrink:0"></div>
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-primary,#e2e8f0)">PLC-04 — TIMEOUT</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="dropdown">
+            <button class="topbar-btn position-relative" data-bs-toggle="dropdown"><i data-feather="bell"></i><span
+                class="indicator" id="notifIndicator">7</span></button>
+            <div class="dropdown-menu dropdown-menu-end" style="width:300px;background:var(--bg-card2,#1c2333);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.5);padding:6px;overflow:hidden">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px 8px;border-bottom:1px solid var(--border,rgba(255,255,255,0.08));margin-bottom:4px">
+                <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b)" data-i18n="top.alarmsActive">ALARMAS ACTIVAS</span>
+                <span class="indicator" id="notifIndicator" style="background:var(--danger,#f87171);color:#fff;border-radius:10px;padding:1px 8px;font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace">7</span>
+              </div>
+              <div id="topbarAlarmList" style="max-height:260px;overflow-y:auto"></div>
+              <div style="padding:10px 12px;border-top:1px solid var(--border,rgba(255,255,255,0.08));margin-top:4px">
+                <a href="#" onclick="showTab('alarms')" style="font-size:13px;color:var(--primary,#638bff);text-decoration:none;font-weight:500;display:flex;align-items:center;gap:6px" data-i18n="top.viewAll">
+                  <i data-feather="arrow-right" style="width:13px;height:13px"></i>Ver todas las alarmas
+                </a>
+              </div>
+            </div>
+          </div>
+          <span class="topbar-clock font-mono d-none d-lg-block" id="clock">--:--:--</span>
+          <button class="topbar-btn ms-1" title="Personalizar" onclick="toggleCustomizer()">
+            <i data-feather="sliders" style="width:16px;height:16px;color:var(--primary)"></i>
+          </button>
+          <button class="topbar-btn" onclick="toggleTheme()" title="Cambiar Tema"><i data-feather="sun"
+              id="themeIcon"></i></button>
+          <div class="dropdown">
+            <button class="topbar-btn" data-bs-toggle="dropdown"><span style="font-size:16px"
+                id="langFlag">🇪🇸</span></button>
+            <div class="dropdown-menu dropdown-menu-end" style="width:160px;background:var(--bg-card2,#1c2333);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.5);padding:6px;overflow:hidden">
+              <a href="#" onclick="setLang('es')" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;font-size:13px;color:var(--text-secondary,#94a3b8);text-decoration:none"
+                onmouseover="this.style.background='rgba(255,255,255,0.05)';this.style.color='var(--text-primary)'"
+                onmouseout="this.style.background='transparent';this.style.color='var(--text-secondary,#94a3b8)'">
+                🇪🇸 Español
+              </a>
+              <a href="#" onclick="setLang('en')" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;font-size:13px;color:var(--text-secondary,#94a3b8);text-decoration:none"
+                onmouseover="this.style.background='rgba(255,255,255,0.05)';this.style.color='var(--text-primary)'"
+                onmouseout="this.style.background='transparent';this.style.color='var(--text-secondary,#94a3b8)'">
+                🇺🇸 English
+              </a>
+              <a href="#" onclick="setLang('de')" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;font-size:13px;color:var(--text-secondary,#94a3b8);text-decoration:none"
+                onmouseover="this.style.background='rgba(255,255,255,0.05)';this.style.color='var(--text-primary)'"
+                onmouseout="this.style.background='transparent';this.style.color='var(--text-secondary,#94a3b8)'">
+                🇩🇪 Deutsch
+              </a>
+            </div>
+          </div>
+          <div class="dropdown">
+            <div class="user-avatar ms-2" data-bs-toggle="dropdown">AD</div>
+            <div class="dropdown-menu dropdown-menu-end" style="width:240px;background:var(--bg-card2,#1c2333);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.5);padding:6px;overflow:hidden">
+              <!-- Header con avatar y datos -->
+              <div style="display:flex;align-items:center;gap:12px;padding:12px 10px 14px;border-bottom:1px solid var(--border,rgba(255,255,255,0.08));margin-bottom:4px">
+                <div style="width:40px;height:40px;background:linear-gradient(135deg,var(--primary,#638bff),#a78bfa);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#fff;flex-shrink:0">AD</div>
+                <div>
+                  <div id="userName" style="font-size:13px;font-weight:600;color:var(--text-primary,#e2e8f0)">Admin User</div>
+                  <div id="userRole" style="font-size:11px;color:var(--text-muted,#64748b);font-family:'JetBrains Mono',monospace;letter-spacing:0.05em">SYSTEM_ADMIN</div>
+                </div>
+              </div>
+              <!-- Items -->
+              <a href="#" onclick="showTab('profile')" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;font-size:13px;color:var(--text-secondary,#94a3b8);text-decoration:none;transition:background 0.15s"
+                onmouseover="this.style.background='rgba(255,255,255,0.05)';this.style.color='var(--text-primary)'"
+                onmouseout="this.style.background='transparent';this.style.color='var(--text-secondary,#94a3b8)'">
+                <i data-feather="user" style="width:14px;height:14px"></i> Perfil
+              </a>
+              <a href="#" onclick="showTab('config')" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;font-size:13px;color:var(--text-secondary,#94a3b8);text-decoration:none;transition:background 0.15s"
+                onmouseover="this.style.background='rgba(255,255,255,0.05)';this.style.color='var(--text-primary)'"
+                onmouseout="this.style.background='transparent';this.style.color='var(--text-secondary,#94a3b8)'">
+                <i data-feather="settings" style="width:14px;height:14px"></i> Ajustes
+              </a>
+              <div style="height:1px;background:var(--border,rgba(255,255,255,0.08));margin:4px 0"></div>
+              <a href="#" onclick="doLogout()" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;font-size:13px;color:var(--danger,#f87171);text-decoration:none;transition:background 0.15s"
+                onmouseover="this.style.background='rgba(248,113,113,0.08)'"
+                onmouseout="this.style.background='transparent'">
+                <i data-feather="log-out" style="width:14px;height:14px"></i> Cerrar Sesión
+              </a>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- CONTENT -->
+      <main class="content">
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-inner" id="ticker">
+    <!-- JS fills -->
+  </div>
+</div>
+
+<!-- ============ DASHBOARD TAB (BUILDER) ============ -->
+<div class="tab-pane active" id="tab-dashboard" style="display:flex; flex-direction:column; height: 100%;">
+  <div class="px-4 pt-4" style="flex-shrink: 0;">
+    <div class="d-flex justify-content-between align-items-center mb-0">
+      <div>
+        <h1 class="text-heading fw-bold mb-1" style="font-size: 28px;">Dashboard Builder</h1>
+        <p class="text-muted small mb-0">Customize and monitor your critical assets in real-time</p>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button onclick="dmToggleLive()" title="Pausar/reanudar datos en vivo"
+          style="background:none;border:1px solid var(--border);color:var(--text-secondary);border-radius:8px;padding:9px 14px;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px"
+          onmouseover="this.style.borderColor='var(--accent-green)';this.style.color='var(--accent-green)'"
+          onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-secondary)'">
+          <i data-feather="radio" style="width:13px;height:13px"></i> LIVE
+        </button>
+        <button onclick="dmClearDashboard()" title="Limpiar dashboard"
+          style="background:none;border:1px solid var(--border);color:var(--text-secondary);border-radius:8px;padding:9px 14px;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px"
+          onmouseover="this.style.borderColor='var(--accent-red)';this.style.color='var(--accent-red)'"
+          onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-secondary)'">
+          <i data-feather="trash-2" style="width:13px;height:13px"></i> Limpiar
+        </button>
+        <button class="btn btn-primary d-flex align-items-center" onclick="toggleWidgetCatalog()" style="font-weight:600;padding:9px 18px;box-shadow:0 0 15px rgba(99,139,255,0.35)">
+          <i data-feather="plus" class="feather-sm me-2"></i> ADD WIDGET
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="px-4 pt-4 flex-grow-1" id="dashGridArea" style="position:relative; overflow-y:auto; overflow-x:hidden;">
+    <div id="emptyDashboardState" style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text-disabled)">
+      <i data-feather="layout" style="width: 64px; height: 64px; opacity: 0.2; margin-bottom:16px;"></i>
+      <h3 style="font-weight:600; color:var(--text-secondary);">El dashboard está vacío</h3>
+      <p style="font-size:14px; max-width:300px; text-align:center;">Haz clic en <strong>ADD WIDGET</strong> para empezar a implementar gráficas y variables al panel.</p>
+    </div>
+    <div id="activeWidgetsGrid" style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 16px; padding-bottom:30px;">
+    </div>
+  </div>
+
+  <div id="widgetCatalog" style="display:none; background:var(--bg-elevated); border-top:1px solid var(--border-default); padding: 24px; box-shadow: 0 -10px 40px rgba(0,0,0,0.5); z-index:100; transition: transform 0.3s ease;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 style="margin:0; font-weight:700; color:var(--text-heading)">Catálogo de Widgets</h5>
+      <button class="btn btn-sm btn-link text-muted p-0" onclick="toggleWidgetCatalog()"><i data-feather="x" class="feather-md"></i></button>
+    </div>
+    <div class="widget-grid" style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap:12px; max-height: 280px; overflow-y:auto; padding-right:8px;">
+      <div class="widget-card" onclick="addWidgetToDash('trend')">
+        <i data-feather="trending-up" style="color:#8b5cf6"></i>
+        <div class="widget-card-title">Tendencia Industrial</div>
+        <div class="widget-card-desc">Comparativa multivariable en tiempo real.</div>
+      </div>
+      <div class="widget-card" onclick="addWidgetToDash('sankey')">
+        <i data-feather="share-2" style="color:#8b5cf6"></i>
+        <div class="widget-card-title">Diagrama de Sankey</div>
+        <div class="widget-card-desc">Flujo de energía y materiales.</div>
+      </div>
+      <div class="widget-card" onclick="addWidgetToDash('heatmap')">
+        <i data-feather="grid" style="color:#8b5cf6"></i>
+        <div class="widget-card-title">Mapa de Calor</div>
+        <div class="widget-card-desc">Distribución de valores en planta.</div>
+      </div>
+      <div class="widget-card" onclick="addWidgetToDash('radar')">
+        <i data-feather="target" style="color:#8b5cf6"></i>
+        <div class="widget-card-title">Radar de Salud</div>
+        <div class="widget-card-desc">Desempeño de activos críticos.</div>
+      </div>
+      <div class="widget-card" onclick="addWidgetToDash('polar')">
+        <i data-feather="aperture" style="color:#8b5cf6"></i>
+        <div class="widget-card-title">Grfico Polar</div>
+        <div class="widget-card-desc">Variables cclicas y ngulos.</div>
+      </div>
+      <div class="widget-card" onclick="addWidgetToDash('bubble')">
+        <i data-feather="circle" style="color:#8b5cf6"></i>
+        <div class="widget-card-title">Correlacin Burbuja</div>
+        <div class="widget-card-desc">Relacin entre tres variables.</div>
+      </div>
+      <div class="widget-card" onclick="addWidgetToDash('gauge')">
+        <i data-feather="activity" style="color:#8b5cf6"></i>
+        <div class="widget-card-title">Medidor Gauge</div>
+        <div class="widget-card-desc">Aguja para valor instantáneo.</div>
+      </div>
+      <div class="widget-card" onclick="addWidgetToDash('line')">
+        <i data-feather="trending-up" style="color:#8b5cf6"></i>
+        <div class="widget-card-title">Línea Simple</div>
+        <div class="widget-card-desc">Histórico clásico 2D.</div>
+      </div>
+      <div class="widget-card" onclick="addWidgetToDash('bar')">
+        <i data-feather="bar-chart-2" style="color:#8b5cf6"></i>
+        <div class="widget-card-title">Gráfico de Barras</div>
+        <div class="widget-card-desc">Agrupamiento categórico.</div>
+      </div>
+      <div class="widget-card" onclick="addWidgetToDash('doughnut')">
+        <i data-feather="pie-chart" style="color:#8b5cf6"></i>
+        <div class="widget-card-title">Anillo / Dona</div>
+        <div class="widget-card-desc">Distribución de estados.</div>
+      </div>
+      <div class="widget-card" onclick="addWidgetToDash('candlestick')">
+        <i data-feather="align-justify" style="color:#8b5cf6"></i>
+        <div class="widget-card-title">Velas Japonesas</div>
+        <div class="widget-card-desc">Rango Máx/Mín estadístico.</div>
+      </div>
+      <div class="widget-card" onclick="addWidgetToDash('text')">
+        <i data-feather="type" style="color:#8b5cf6"></i>
+        <div class="widget-card-title">Dato Crudo (Texto)</div>
+        <div class="widget-card-desc">Valor numérico gigante.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============ PROCESS TAB ============ -->
+<div class="tab-pane" style="display:none" id="tab-process">
+  <div class="section-label">DIAGRAMA DE FLUJO — P&amp;ID</div>
+  <div class="panel fade-in" style="margin-bottom:16px">
+    <div class="panel-header" id="pidToolbar">
+      <div class="panel-title">Proceso Principal — <span id="pidLabel">Línea A</span></div>
+      <div class="panel-badge live">● EN LÍNEA</div>
+      <div class="panel-spacer"></div>
+      <button id="pidResetZoom" class="btn btn-sm" style="border:1px solid var(--border-default);color:var(--text-secondary);background:transparent;font-size:11px;margin-right:8px">Reset Zoom</button>
+      <div class="panel-action">⤢</div>
+    </div>
+    <div id="pidContainer" style="padding:4px;overflow:hidden;min-height:340px;position:relative;background:var(--bg-deep)">
+      <div id="pidEmptyState" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:332px;color:var(--text-secondary);text-align:center;padding:24px">
+        <div style="font-size:48px;margin-bottom:12px;opacity:.6">📐</div>
+        <div style="font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:6px">Visualizador P&ID vacío</div>
+        <div style="font-size:12px;max-width:420px;line-height:1.5">Sube un archivo <b>.svg</b> con el botón "Subir P&ID" o arrástralo sobre este panel para visualizarlo.</div>
+      </div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+    <div class="panel fade-in">
+      <div class="panel-header"><div class="panel-title">Bomba B-101</div></div>
+      <div class="panel-body">
+        <div class="var-grid" style="grid-template-columns:1fr">
+          <div class="var-item" style="--var-color:var(--accent-green);--var-pct:0.72">
+            <div class="var-name">Caudal Salida</div>
+            <div class="var-val" style="color:var(--accent-green)">142<span class="var-unit">m³/h</span></div>
+            <div class="var-range">Rango: 0–200 m³/h</div>
+            <div class="var-status"></div>
+          </div>
+          <div class="var-item" style="--var-color:var(--accent-cyan);--var-pct:0.55">
+            <div class="var-name">Presión Descarga</div>
+            <div class="var-val" style="color:var(--accent-cyan)">4.2<span class="var-unit">bar</span></div>
+            <div class="var-range">Rango: 0–8 bar</div>
+            <div class="var-status"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="panel fade-in">
+      <div class="panel-header"><div class="panel-title">Intercambiador HX-201</div></div>
+      <div class="panel-body">
+        <div class="var-grid" style="grid-template-columns:1fr">
+          <div class="var-item" style="--var-color:var(--accent-red);--var-pct:0.88">
+            <div class="var-name">Temp. Proceso</div>
+            <div class="var-val" style="color:var(--accent-red)">312<span class="var-unit">°C</span></div>
+            <div class="var-range">Rango: 0–400 °C</div>
+            <div class="var-status"></div>
+          </div>
+          <div class="var-item" style="--var-color:var(--accent-amber);--var-pct:0.64">
+            <div class="var-name">Temp. Servicio</div>
+            <div class="var-val" style="color:var(--accent-amber)">185<span class="var-unit">°C</span></div>
+            <div class="var-range">Rango: 0–300 °C</div>
+            <div class="var-status"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="panel fade-in">
+      <div class="panel-header"><div class="panel-title">Separador V-301</div></div>
+      <div class="panel-body">
+        <div class="var-grid" style="grid-template-columns:1fr">
+          <div class="var-item" style="--var-color:var(--accent-blue);--var-pct:0.58">
+            <div class="var-name">Nivel</div>
+            <div class="var-val" style="color:var(--accent-blue)">58<span class="var-unit">%</span></div>
+            <div class="var-range">Rango: 0–100 %</div>
+            <div class="var-status"></div>
+          </div>
+          <div class="var-item" style="--var-color:var(--accent-purple);--var-pct:0.4">
+            <div class="var-name">Presión</div>
+            <div class="var-val" style="color:var(--accent-purple)">3.1<span class="var-unit">bar</span></div>
+            <div class="var-range">Rango: 0–8 bar</div>
+            <div class="var-status"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ALARMS TAB ============ -->
+<div class="tab-pane" style="display:none" id="tab-alarms">
+  <div class="section-label">GESTIÓN DE ALARMAS</div>
+  <div style="display:grid;grid-template-columns:1fr 320px;gap:16px">
+    <div class="panel fade-in">
+      <div class="panel-header">
+        <div class="panel-title">Registro de Alarmas</div>
+        <div class="panel-badge count" id="alarmCount2">7</div>
+        <div class="panel-spacer"></div>
+        <div style="display:flex;gap:6px">
+          <div class="filter-chip active" onclick="filterAlarms('all',this)">TODAS</div>
+          <div class="filter-chip" onclick="filterAlarms('critical',this)">CRÍTICAS</div>
+          <div class="filter-chip" onclick="filterAlarms('high',this)">ALTAS</div>
+          <div class="filter-chip" onclick="filterAlarms('resolved',this)">RESUELTAS</div>
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="tag-table" id="alarmTable">
+          <thead>
+            <tr>
+              <th>PRIORIDAD</th>
+              <th>TAG</th>
+              <th>DESCRIPCIÓN</th>
+              <th>VALOR</th>
+              <th>LÍMITE</th>
+              <th>HORA</th>
+              <th>ESTADO</th>
+            </tr>
+          </thead>
+          <tbody id="alarmTableBody">
+            <!-- JS fills -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="panel fade-in">
+        <div class="panel-header"><div class="panel-title">Estadísticas</div></div>
+        <div class="panel-body">
+          <div style="height:180px"><canvas id="alarmPieChart"></canvas></div>
+        </div>
+      </div>
+      <div class="panel fade-in">
+        <div class="panel-header"><div class="panel-title">Top Áreas</div></div>
+        <div class="panel-body">
+          <div id="alarmAreas"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ HISTORICS TAB ============ -->
+<div class="tab-pane" style="display:none" id="tab-historics">
+  <div class="section-label">HISTÓRICOS Y REPORTES</div>
+  
+  <!-- Contenedor Principal (Tendencias) -->
+  <div id="hm_container_main" style="margin-bottom:16px">
+    <!-- HistoricosManager will inject the first widget here -->
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <!-- Contenedor Izquierdo (Correlación) -->
+    <div id="hm_container_scatter">
+      <!-- HistoricosManager will inject the second widget here -->
+    </div>
+    
+    <!-- Contenedor Derecho (Distribución) -->
+    <div id="hm_container_dist">
+      <!-- HistoricosManager will inject the third widget here -->
+    </div>
+  </div>
+
+  <div class="panel fade-in" style="margin-top:16px">
+    <div class="panel-header"><div class="panel-title">Reportes Programados</div></div>
+    <div class="panel-body">
+      <table class="tag-table">
+        <thead><tr><th>REPORTE</th><th>FRECUENCIA</th><th>PRÓXIMO</th><th>ESTADO</th></tr></thead>
+        <tbody>
+          <tr><td>Producción Diaria</td><td>Diario 06:00</td><td>Mañana</td><td><span style="color:var(--accent-green)">●</span> Activo</td></tr>
+          <tr><td>Balance Energético</td><td>Semanal Lun</td><td>Lun 06:00</td><td><span style="color:var(--accent-green)">●</span> Activo</td></tr>
+          <tr><td>Informe de Alarmas</td><td>Mensual 1ro</td><td>01/04</td><td><span style="color:var(--accent-green)">●</span> Activo</td></tr>
+          <tr><td>KPIs Ejecutivo</td><td>Mensual 1ro</td><td>01/04</td><td><span style="color:var(--accent-amber)">●</span> Pendiente</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 3D TAB ============ -->
+<div class="tab-pane" style="display:none" id="tab-3d">
+  <div class="section-label">VISUALIZACIÓN 3D — PLANTA INDUSTRIAL</div>
+  <div class="panel fade-in" style="margin-bottom:0">
+    <div class="panel-header" id="toolbar3D" style="border-bottom:1px solid var(--border)">
+      <div class="panel-title" id="3dModelTitle">Modelo 3D — Refinería Norte</div>
+      <div class="panel-badge live" style="margin-left:8px">● INTERACTIVO</div>
+      <div class="panel-spacer"></div>
+      <!-- Botones de vista -->
+      <button onclick="resetCamera()" title="Reset cámara"
+        style="display:flex;align-items:center;gap:6px;background:none;border:1px solid var(--border);color:var(--text-secondary);border-radius:7px;padding:5px 11px;font-size:12px;cursor:pointer;transition:all 0.15s;margin-right:4px"
+        onmouseover="this.style.borderColor='var(--primary)';this.style.color='var(--primary)'"
+        onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-secondary)'">
+        <i data-feather="rotate-cw" style="width:13px;height:13px;pointer-events:none"></i> Reset
+      </button>
+      <button onclick="topView()" title="Vista superior"
+        style="display:flex;align-items:center;gap:6px;background:none;border:1px solid var(--border);color:var(--text-secondary);border-radius:7px;padding:5px 11px;font-size:12px;cursor:pointer;transition:all 0.15s;margin-right:4px"
+        onmouseover="this.style.borderColor='var(--primary)';this.style.color='var(--primary)'"
+        onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-secondary)'">
+        <i data-feather="layout" style="width:13px;height:13px;pointer-events:none"></i> Top
+      </button>
+      <button onclick="frontView()" title="Vista frontal"
+        style="display:flex;align-items:center;gap:6px;background:none;border:1px solid var(--border);color:var(--text-secondary);border-radius:7px;padding:5px 11px;font-size:12px;cursor:pointer;transition:all 0.15s;margin-right:4px"
+        onmouseover="this.style.borderColor='var(--primary)';this.style.color='var(--primary)'"
+        onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-secondary)'">
+        <i data-feather="square" style="width:13px;height:13px;pointer-events:none"></i> Frente
+      </button>
+      <button onclick="toggle3DWire()" title="Wireframe"
+        style="display:flex;align-items:center;gap:6px;background:none;border:1px solid var(--border);color:var(--text-secondary);border-radius:7px;padding:5px 11px;font-size:12px;cursor:pointer;transition:all 0.15s;margin-right:4px"
+        onmouseover="this.style.borderColor='var(--accent-cyan)';this.style.color='var(--accent-cyan)'"
+        onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-secondary)'">
+        <i data-feather="grid" style="width:13px;height:13px;pointer-events:none"></i> Wire
+      </button>
+    </div>
+    <div class="three-wrapper">
+      <canvas id="three-canvas"></canvas>
+      <div class="three-overlay">
+        <div class="three-label" id="selectedLabel" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ AI TAB ============ -->
+<div class="tab-pane" style="display:none" id="tab-ai">
+  <div class="section-label">INTELIGENCIA ARTIFICIAL & MACHINE LEARNING</div>
+  <div class="ml-row">
+    <div class="panel fade-in">
+      <div class="panel-header">
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--accent-red);box-shadow:var(--glow-red);animation:pulse-dot 1s infinite;margin-right:4px"></div>
+        <div class="panel-title">Predicción de Fallos</div>
+      </div>
+      <div class="panel-body">
+        <div class="pred-card">
+          <div class="pred-icon" style="background:rgba(255,51,85,0.1);border:1px solid rgba(255,51,85,0.2)">⚙</div>
+          <div style="flex:1">
+            <div style="font-size:12px;color:var(--text-dim);margin-bottom:2px">BOMBA B-204</div>
+            <div style="display:flex;align-items:baseline;gap:6px">
+              <div class="pred-score" style="color:var(--accent-red)">87<span style="font-size:16px">%</span></div>
+              <div style="font-size:11px;color:var(--text-secondary)">prob. fallo en 48h</div>
+            </div>
+            <div class="prog-bar"><div class="prog-fill" style="width:87%;background:var(--accent-red)"></div></div>
+            <div class="pred-desc">Vibración excesiva detectada. Rodamiento deteriorado probable. Se recomienda inspección inmediata.</div>
+          </div>
+        </div>
+        <div class="pred-card">
+          <div class="pred-icon" style="background:rgba(255,170,0,0.1);border:1px solid rgba(255,170,0,0.2)">🌡</div>
+          <div style="flex:1">
+            <div style="font-size:12px;color:var(--text-dim);margin-bottom:2px">INTERCAMB. HX-102</div>
+            <div style="display:flex;align-items:baseline;gap:6px">
+              <div class="pred-score" style="color:var(--accent-amber)">62<span style="font-size:16px">%</span></div>
+              <div style="font-size:11px;color:var(--text-secondary)">prob. incrustación</div>
+            </div>
+            <div class="prog-bar"><div class="prog-fill" style="width:62%;background:var(--accent-amber)"></div></div>
+            <div class="pred-desc">Eficiencia térmica cayó 12% en 7 días. Limpieza química recomendada próxima parada.</div>
+          </div>
+        </div>
+        <div class="pred-card">
+          <div class="pred-icon" style="background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.2)">⚡</div>
+          <div style="flex:1">
+            <div style="font-size:12px;color:var(--text-dim);margin-bottom:2px">COMPRESOR C-301</div>
+            <div style="display:flex;align-items:baseline;gap:6px">
+              <div class="pred-score" style="color:var(--accent-green)">18<span style="font-size:16px">%</span></div>
+              <div style="font-size:11px;color:var(--text-secondary)">riesgo bajo</div>
+            </div>
+            <div class="prog-bar"><div class="prog-fill" style="width:18%;background:var(--accent-green)"></div></div>
+            <div class="pred-desc">Funcionamiento nominal. Próxima mantención preventiva en 320 horas operativas.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="panel fade-in">
+      <div class="panel-header">
+        <div class="ai-dot"></div>
+        <div class="panel-title">Detección de Anomalías</div>
+      </div>
+      <div style="height:200px;padding:18px"><canvas id="anomalyChart"></canvas></div>
+      <div class="panel-body" style="padding-top:0">
+        <div style="display:flex;flex-direction:column;gap:8px" id="anomalyList">
+        </div>
+      </div>
+    </div>
+    <div class="ai-panel fade-in">
+      <div class="ai-header">
+        <div class="ai-dot"></div>
+        <div class="panel-title">Asistente IA Industrial</div>
+      </div>
+      <div class="ai-messages" id="aiMessages">
+        <div class="msg-bot">
+          Hola, soy el asistente de NexSCADA. Puedo ayudarte con consultas de proceso, análisis de alarmas, predicciones de mantenimiento y más.
+          <div class="msg-time">09:12:45</div>
+        </div>
+        <div class="msg-user">
+          ¿Cuál es el estado de la Bomba B-204?
+          <div class="msg-time">09:13:02</div>
+        </div>
+        <div class="msg-bot">
+          ⚠️ La <strong>Bomba B-204</strong> muestra señales de deterioro:<br>
+          • Vibración: 12.4 mm/s (umbral: 7.1 mm/s)<br>
+          • Temperatura rodamiento: 78°C (umbral: 70°C)<br>
+          • Probabilidad de fallo: <strong style="color:var(--accent-red)">87%</strong> en 48h<br><br>
+          Recomendación: Programar inspección inmediata.
+          <div class="msg-time">09:13:05</div>
+        </div>
+      </div>
+      <div class="ai-input-row">
+        <input class="ai-input" id="aiInput" placeholder="Consulta sobre el proceso..." onkeydown="if(event.key==='Enter')sendAI()">
+        <button class="ai-send" onclick="sendAI()">➤</button>
+      </div>
+    </div>
+  </div>
+  <div class="panel fade-in">
+    <div class="panel-header"><div class="panel-title">Modelo Predictivo — Producción 7 Días</div></div>
+    <div style="height:220px;padding:18px"><canvas id="forecastChart"></canvas></div>
+  </div>
+</div>
+
+
+<!-- ============ DOCS TAB ============ -->
+<div class="tab-pane" style="display:none" id="tab-docs">
+  <div class="section-label">DOCUMENTACIÓN Y MANUALES</div>
+  <div class="row g-4">
+    <div class="col-lg-4">
+      <div class="doc-accordion">
+        <div class="doc-accordion-item open" onclick="this.classList.toggle('open')">
+          <div class="doc-accordion-header"><i data-feather="book"></i> Manual del Operador</div>
+          <div class="doc-accordion-content">
+            NexSCADA — Sistema de Control y Adquisición de Datos. Versión 3.2.1.
+            <ul class="list-unstyled mt-2">
+              <li><a href="#" class="text-primary small">1. Introducción</a></li>
+              <li><a href="#" class="text-primary small">2. Arquitectura</a></li>
+              <li><a href="#" class="text-primary small">3. Inicio Rápido</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="doc-accordion-item" onclick="this.classList.toggle('open')">
+          <div class="doc-accordion-header"><i data-feather="tool"></i> Guía de Mantenimiento</div>
+          <div class="doc-accordion-content">Protocolos de mantenimiento preventivo y correctivo para activos críticos.</div>
+        </div>
+        <div class="doc-accordion-item" onclick="this.classList.toggle('open')">
+          <div class="doc-accordion-header"><i data-feather="globe"></i> API Reference</div>
+          <div class="doc-accordion-content">Documentación técnica para integración vía REST y WebSocket.</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-8">
+      <div class="panel fade-in" style="height: 100%; border:1px solid var(--border-default);">
+        <div class="panel-header">
+          <div class="panel-title">Documentación Extendida v5.0</div>
+          <div class="panel-spacer"></div>
+          <button class="btn btn-sm btn-outline-secondary" onclick="window.open('/api/files/raw?path=/docs&name=documentacion.md')">📥 Ver Original</button>
+        </div>
+        <div class="panel-body" style="height:calc(100vh - 200px); overflow-y:auto;">
+          <div id="docs-content" class="markdown-body" style="font-family:'Inter',sans-serif;font-size:14px;line-height:1.7;color:var(--text-secondary);">
+             <div class="spinner-border spinner-border-sm text-primary me-2"></div> Cargando documentación del sistema...
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+         // Intentar cargar la documentación con path corregido
+         fetch('/api/files/raw?path=docs&name=documentacion.md')
+           .then(r => {
+              if(!r.ok) throw new Error('Status ' + r.status);
+              return r.text();
+           })
+           .then(text => {
+              const el = document.getElementById('docs-content');
+              if (el && typeof marked !== 'undefined') {
+                 el.innerHTML = marked.parse(text);
+                 // Tweak colors
+                 el.querySelectorAll('h1,h2,h3').forEach(h => { h.style.color = 'var(--text-heading)'; h.style.marginTop = '24px'; });
+                 el.querySelectorAll('code').forEach(c => { c.style.background = 'var(--bg-card2)'; c.style.color = 'var(--accent-cyan)'; c.style.padding = '2px 6px'; c.style.borderRadius = '4px'; });
+                 el.querySelectorAll('pre').forEach(p => { p.style.background = 'var(--bg-deep)'; p.style.padding = '16px'; p.style.borderRadius = '8px'; p.style.overflowX = 'auto'; });
+                 el.querySelectorAll('strong').forEach(b => b.style.color = 'var(--text-primary)');
+                 el.querySelectorAll('li').forEach(l => l.style.marginBottom = '6px');
+              }
+           }).catch(e => console.error('Error dev', e));
+      });
+    </script>
+  </div>
+</div>
+
+
+<!-- ============ CONFIG TAB ============ -->
+<div id="tab-config" class="tab-pane" style="display:none">
+  <div class="config-header">
+    <h1 class="config-title">Configuración del Sistema</h1>
+    <div class="config-nav">
+      <div class="config-nav-item active" onclick="window.setConfigSubTab('profile', this)">
+        <i data-feather="user"></i> Perfil
+      </div>
+      <div class="config-nav-item" onclick="window.setConfigSubTab('tags', this)">
+        <i data-feather="tag"></i> Tags
+      </div>
+      <div class="config-nav-item" onclick="window.setConfigSubTab('variables', this)">
+        <i data-feather="database"></i> Variables
+      </div>
+      <div class="config-nav-item" onclick="window.setConfigSubTab('connections', this)">
+        <i data-feather="wifi"></i> Conexiones
+      </div>
+      <div class="config-nav-item" onclick="window.setConfigSubTab('alarms', this)">
+        <i data-feather="bell"></i> Alarmas
+      </div>
+      <div class="config-nav-item" onclick="window.setConfigSubTab('users', this)">
+        <i data-feather="users"></i> Usuarios
+      </div>
+      <div class="config-nav-item" onclick="window.setConfigSubTab('system', this)">
+        <i data-feather="monitor"></i> Sistema
+      </div>
+    </div>
+  </div>
+
+  <!-- Sub-panes -->
+  <div id="config-profile" class="config-pane" style="padding:0 30px 30px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div class="panel fade-in" style="margin-bottom:0">
+        <div class="panel-header"><div class="panel-title">Foto de Perfil</div></div>
+        <div class="panel-body" style="display:flex;flex-direction:column;align-items:center;gap:16px;padding:28px">
+          <div id="profileAvatarWrap" style="position:relative;cursor:pointer" onclick="document.getElementById('profilePhotoInput').click()">
+            <div id="profileAvatarImg" style="width:96px;height:96px;border-radius:20px;background:linear-gradient(135deg,var(--primary,#638bff),#a78bfa);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:32px;color:#fff;font-family:'Rajdhani',sans-serif;box-shadow:0 0 24px rgba(99,139,255,0.3)">AD</div>
+            <div style="position:absolute;bottom:-4px;right:-4px;width:26px;height:26px;background:var(--primary,#638bff);border-radius:50%;display:flex;align-items:center;justify-content:center">
+              <i data-feather="camera" style="width:12px;height:12px;color:#fff"></i>
+            </div>
+          </div>
+          <input type="file" id="profilePhotoInput" accept="image/*" style="display:none"
+            onchange="(function(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){var w=document.getElementById('profileAvatarImg');w.innerHTML='';w.style.background='none';var im=document.createElement('img');im.src=ev.target.result;im.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:20px';w.appendChild(im);localStorage.setItem('scada_avatar',ev.target.result);};r.readAsDataURL(f);})(event)">
+          <div style="text-align:center">
+            <div style="font-size:13px;color:var(--text-secondary,#94a3b8)">Haz clic para cambiar la foto</div>
+            <div style="font-size:11px;color:var(--text-muted,#64748b);margin-top:4px">JPG, PNG · Máx 2 MB</div>
+          </div>
+          <button onclick="(function(){var w=document.getElementById('profileAvatarImg');w.innerHTML='AD';w.style.background='linear-gradient(135deg,var(--primary,#638bff),#a78bfa)';localStorage.removeItem('scada_avatar');showNotif('Foto eliminada','info');})()" style="background:none;border:1px solid var(--border,rgba(255,255,255,0.08));color:var(--text-secondary,#94a3b8);border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-size:12px;padding:6px 14px">Eliminar foto</button>
+        </div>
+      </div>
+      <div class="panel fade-in" style="margin-bottom:0">
+        <div class="panel-header"><div class="panel-title">Información Personal</div></div>
+        <div class="panel-body" style="display:flex;flex-direction:column;gap:14px">
+          <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">NOMBRE COMPLETO</label><input type="text" id="profileName" class="form-control" value="Admin User" placeholder="Tu nombre completo" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div>
+          <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">CORREO ELECTRÓNICO</label><input type="email" id="profileEmail" class="form-control" value="admin@nexscada.com" placeholder="correo@empresa.com" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div>
+          <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">CARGO / ROL</label><input type="text" id="profileCargo" class="form-control" value="Administrador del Sistema" placeholder="Ej: Ingeniero de Proceso" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div>
+          <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">PLANTA ASIGNADA</label><select id="profilePlant" class="form-select" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;font-family:'Inter',sans-serif"><option>PLANTA_01 — Refinería Norte</option><option>PLANTA_02 — Subestación Central</option><option>PLANTA_03 — Agua Potable Sur</option></select></div>
+          <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">TELÉFONO</label><input type="text" id="profilePhone" class="form-control" value="+57 300 000 0000" placeholder="" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div>
+        </div>
+      </div>
+    </div>
+    <div class="panel fade-in">
+      <div class="panel-header"><div class="panel-title">Seguridad de Cuenta</div></div>
+      <div class="panel-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px">
+          <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">CONTRASEÑA ACTUAL</label><input type="password" id="pwdCurrent" class="form-control" value="" placeholder="" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div>
+          <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">NUEVA CONTRASEÑA</label><input type="password" id="pwdNew" class="form-control" value="" placeholder="Mín. 8 caracteres" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div>
+          <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">CONFIRMAR</label><input type="password" id="pwdConfirm" class="form-control" value="" placeholder="Repetir contraseña" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px"><div><div style="font-size:13px;color:var(--text-primary,#e2e8f0)">Autenticación de dos factores (2FA)</div><div style="font-size:11px;color:var(--text-muted,#64748b)">Código adicional al iniciar sesión</div></div><div style="background:rgba(255,255,255,0.12);width:40px;height:22px;border-radius:11px;position:relative;cursor:pointer;flex-shrink:0"><div style="width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;box-shadow:0 1px 3px rgba(0,0,0,0.3)"></div></div></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px"><div><div style="font-size:13px;color:var(--text-primary,#e2e8f0)">Notificaciones de acceso</div><div style="font-size:11px;color:var(--text-muted,#64748b)">Alerta por email al detectar nuevo login</div></div><div style="background:var(--accent-green,#34d399);width:40px;height:22px;border-radius:11px;position:relative;cursor:pointer;flex-shrink:0"><div style="width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:2px;right:2px;box-shadow:0 1px 3px rgba(0,0,0,0.3)"></div></div></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px"><div><div style="font-size:13px;color:var(--text-primary,#e2e8f0)">Sesión persistente</div><div style="font-size:11px;color:var(--text-muted,#64748b)">Mantener sesión activa 30 días</div></div><div style="background:var(--accent-green,#34d399);width:40px;height:22px;border-radius:11px;position:relative;cursor:pointer;flex-shrink:0"><div style="width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:2px;right:2px;box-shadow:0 1px 3px rgba(0,0,0,0.3)"></div></div></div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px"><button onclick="showNotif('Contraseña actualizada','success')" style="background:var(--primary,#638bff);border:none;color:#fff;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer">Cambiar Contraseña</button><button style="background:none;border:1px solid var(--border,rgba(255,255,255,0.08));color:var(--text-secondary,#94a3b8);border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer">Restablecer</button><button onclick="showNotif('Guardado correctamente','success')" style="background:var(--primary,#638bff);border:none;color:#fff;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer">Guardar Cambios</button></div>
+      </div>
+    </div>
+    <div class="panel fade-in">
+      <div class="panel-header"><div class="panel-title">Preferencias de Interfaz</div></div>
+      <div class="panel-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px">
+          <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">IDIOMA</label><select id="prefLang" class="form-select" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;font-family:'Inter',sans-serif"><option>Español</option><option>English</option><option>Deutsch</option></select></div>
+          <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">ZONA HORARIA</label><select id="prefTz" class="form-select" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;font-family:'Inter',sans-serif"><option>America/Bogota (UTC-5)</option><option>America/Lima (UTC-5)</option><option>Europe/Madrid (UTC+1)</option><option>UTC</option></select></div>
+          <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">FORMATO DE FECHA</label><select id="prefDate" class="form-select" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;font-family:'Inter',sans-serif"><option>DD/MM/YYYY</option><option>MM/DD/YYYY</option><option>YYYY-MM-DD</option></select></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:0">
+          <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">TEMPERATURA</label><select id="prefTemp" class="form-select" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;font-family:'Inter',sans-serif"><option>Celsius (°C)</option><option>Fahrenheit (°F)</option><option>Kelvin (K)</option></select></div>
+          <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">PRESIÓN</label><select id="prefPres" class="form-select" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;font-family:'Inter',sans-serif"><option>bar</option><option>PSI</option><option>kPa</option><option>MPa</option></select></div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px"><button style="background:none;border:1px solid var(--border,rgba(255,255,255,0.08));color:var(--text-secondary,#94a3b8);border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer">Restablecer</button><button onclick="showNotif('Guardado correctamente','success')" style="background:var(--primary,#638bff);border:none;color:#fff;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer">Guardar Cambios</button></div>
+  </div>
+
+  <div id="config-tags" class="config-pane" style="display:none;padding:0 30px 30px">
+    <div class="panel fade-in">
+      <div class="panel-header">
+        <div class="panel-title">Gestión de Tags</div>
+        <div class="panel-badge count">7</div>
+        <div class="panel-spacer"></div>
+        <button onclick="showNotif('Importar CSV próximamente','info')" style="background:none;border:1px solid var(--border,rgba(255,255,255,0.08));color:var(--text-secondary,#94a3b8);border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-size:12px;padding:6px 14px;margin-right:8px"><i data-feather="upload" style="width:13px;height:13px"></i> Importar</button>
+        <button onclick="showNotif('Nuevo tag próximamente','info')" style="background:var(--primary,#638bff);border:none;color:#fff;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer;font-size:12px;padding:6px 14px"><i data-feather="plus" style="width:13px;height:13px"></i> Nuevo Tag</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="table table-dark table-hover align-middle" style="font-size:13px">
+          <thead style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.08em;color:var(--text-muted,#64748b)">
+            <tr><th>ST</th><th>TAG</th><th>DESCRIPCIÓN</th><th>TIPO</th><th>UNIDAD</th><th>MIN</th><th>MAX</th><th>PROTOCOLO</th><th class="text-end">ACCIONES</th></tr>
+          </thead>
+          <tbody><tr>
+      <td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent-green);box-shadow:0 0 6px var(--accent-green)"></span></td>
+      <td style="font-family:'JetBrains Mono',monospace;color:var(--accent-cyan);font-weight:600">TT-101</td>
+      <td style="font-size:13px;color:var(--text-secondary,#94a3b8)">Temp. Reactor R-201</td>
+      <td style="font-size:12px;color:var(--text-muted,#64748b)">Analog</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-secondary,#94a3b8)">°C</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted,#64748b)">0</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted,#64748b)">400</td>
+      <td><span style="font-family:'JetBrains Mono',monospace;font-size:10px;padding:2px 7px;background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.2);border-radius:4px;color:var(--accent-cyan)">MODBUS</span></td>
+      <td class="text-end"><button style="background:none;border:1px solid var(--border);color:var(--text-secondary,#94a3b8);border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer;margin-right:4px">Editar</button><button style="background:none;border:1px solid rgba(239,68,68,0.3);color:var(--accent-red);border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer">Eliminar</button></td>
+    </tr><tr>
+      <td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent-green);box-shadow:0 0 6px var(--accent-green)"></span></td>
+      <td style="font-family:'JetBrains Mono',monospace;color:var(--accent-cyan);font-weight:600">PT-201</td>
+      <td style="font-size:13px;color:var(--text-secondary,#94a3b8)">Presión Separador V-301</td>
+      <td style="font-size:12px;color:var(--text-muted,#64748b)">Analog</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-secondary,#94a3b8)">bar</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted,#64748b)">0</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted,#64748b)">10</td>
+      <td><span style="font-family:'JetBrains Mono',monospace;font-size:10px;padding:2px 7px;background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.2);border-radius:4px;color:var(--accent-cyan)">OPC-UA</span></td>
+      <td class="text-end"><button style="background:none;border:1px solid var(--border);color:var(--text-secondary,#94a3b8);border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer;margin-right:4px">Editar</button><button style="background:none;border:1px solid rgba(239,68,68,0.3);color:var(--accent-red);border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer">Eliminar</button></td>
+    </tr><tr>
+      <td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent-green);box-shadow:0 0 6px var(--accent-green)"></span></td>
+      <td style="font-family:'JetBrains Mono',monospace;color:var(--accent-cyan);font-weight:600">FT-301</td>
+      <td style="font-size:13px;color:var(--text-secondary,#94a3b8)">Caudal Entrada Proceso</td>
+      <td style="font-size:12px;color:var(--text-muted,#64748b)">Analog</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-secondary,#94a3b8)">m³/h</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted,#64748b)">0</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted,#64748b)">200</td>
+      <td><span style="font-family:'JetBrains Mono',monospace;font-size:10px;padding:2px 7px;background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.2);border-radius:4px;color:var(--accent-cyan)">MODBUS</span></td>
+      <td class="text-end"><button style="background:none;border:1px solid var(--border);color:var(--text-secondary,#94a3b8);border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer;margin-right:4px">Editar</button><button style="background:none;border:1px solid rgba(239,68,68,0.3);color:var(--accent-red);border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer">Eliminar</button></td>
+    </tr><tr>
+      <td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent-green);box-shadow:0 0 6px var(--accent-green)"></span></td>
+      <td style="font-family:'JetBrains Mono',monospace;color:var(--accent-cyan);font-weight:600">LT-401</td>
+      <td style="font-size:13px;color:var(--text-secondary,#94a3b8)">Nivel Tanque TK-401</td>
+      <td style="font-size:12px;color:var(--text-muted,#64748b)">Analog</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-secondary,#94a3b8)">%</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted,#64748b)">0</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted,#64748b)">100</td>
+      <td><span style="font-family:'JetBrains Mono',monospace;font-size:10px;padding:2px 7px;background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.2);border-radius:4px;color:var(--accent-cyan)">MQTT</span></td>
+      <td class="text-end"><button style="background:none;border:1px solid var(--border);color:var(--text-secondary,#94a3b8);border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer;margin-right:4px">Editar</button><button style="background:none;border:1px solid rgba(239,68,68,0.3);color:var(--accent-red);border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer">Eliminar</button></td>
+    </tr><tr>
+      <td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent-green);box-shadow:0 0 6px var(--accent-green)"></span></td>
+      <td style="font-family:'JetBrains Mono',monospace;color:var(--accent-cyan);font-weight:600">VT-501</td>
+      <td style="font-size:13px;color:var(--text-secondary,#94a3b8)">Vibración Bomba B-204</td>
+      <td style="font-size:12px;color:var(--text-muted,#64748b)">Analog</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-secondary,#94a3b8)">mm/s</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted,#64748b)">0</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted,#64748b)">25</td>
+      <td><span style="font-family:'JetBrains Mono',monospace;font-size:10px;padding:2px 7px;background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.2);border-radius:4px;color:var(--accent-cyan)">MODBUS</span></td>
+      <td class="text-end"><button style="background:none;border:1px solid var(--border);color:var(--text-secondary,#94a3b8);border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer;margin-right:4px">Editar</button><button style="background:none;border:1px solid rgba(239,68,68,0.3);color:var(--accent-red);border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer">Eliminar</button></td>
+    </tr><tr>
+      <td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent-red);box-shadow:0 0 6px var(--accent-red)"></span></td>
+      <td style="font-family:'JetBrains Mono',monospace;color:var(--accent-cyan);font-weight:600">DI-601</td>
+      <td style="font-size:13px;color:var(--text-secondary,#94a3b8)">Estado Válvula V-601</td>
+      <td style="font-size:12px;color:var(--text-muted,#64748b)">Digital</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-secondary,#94a3b8)">—</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted,#64748b)">0</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted,#64748b)">1</td>
+      <td><span style="font-family:'JetBrains Mono',monospace;font-size:10px;padding:2px 7px;background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.2);border-radius:4px;color:var(--accent-cyan)">MODBUS</span></td>
+      <td class="text-end"><button style="background:none;border:1px solid var(--border);color:var(--text-secondary,#94a3b8);border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer;margin-right:4px">Editar</button><button style="background:none;border:1px solid rgba(239,68,68,0.3);color:var(--accent-red);border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer">Eliminar</button></td>
+    </tr><tr>
+      <td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent-green);box-shadow:0 0 6px var(--accent-green)"></span></td>
+      <td style="font-family:'JetBrains Mono',monospace;color:var(--accent-cyan);font-weight:600">AO-701</td>
+      <td style="font-size:13px;color:var(--text-secondary,#94a3b8)">Apertura Válvula VCF-701</td>
+      <td style="font-size:12px;color:var(--text-muted,#64748b)">Analog Out</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-secondary,#94a3b8)">%</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted,#64748b)">0</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted,#64748b)">100</td>
+      <td><span style="font-family:'JetBrains Mono',monospace;font-size:10px;padding:2px 7px;background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.2);border-radius:4px;color:var(--accent-cyan)">OPC-UA</span></td>
+      <td class="text-end"><button style="background:none;border:1px solid var(--border);color:var(--text-secondary,#94a3b8);border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer;margin-right:4px">Editar</button><button style="background:none;border:1px solid rgba(239,68,68,0.3);color:var(--accent-red);border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer">Eliminar</button></td>
+    </tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="config-variables" class="config-pane" style="display:none;padding:0 30px 30px">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h6 class="mb-0">Gestor de Variables</h6>
+      <button class="btn btn-primary btn-sm" onclick="openVarEditor()">
+        <i data-feather="plus" class="feather-xs me-1"></i>Añadir Variable
+      </button>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-dark table-hover align-middle">
+        <thead>
+          <tr>
+            <th>ID</th><th>Tag</th><th>Descripción</th><th>Unidad</th>
+            <th>Origen Datos</th><th>Estado</th><th class="text-end">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="varManagerBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="config-connections" class="config-pane" style="display:none;padding:0 30px 30px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div class="panel fade-in" style="margin-bottom:0">
+        <div class="panel-header">
+          <div class="panel-title">MODBUS TCP</div>
+          <span style="font-size:11px;padding:2px 10px;background:rgba(52,211,153,0.12);color:var(--accent-green);border-radius:10px;border:1px solid rgba(52,211,153,0.25);font-family:'JetBrains Mono',monospace;font-weight:600">● CONECTADO</span>
+        </div>
+        <div class="panel-body" style="display:flex;flex-direction:column;gap:12px">
+          <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">IP / HOST</label><input type="text" id="mbHost" class="form-control" value="192.168.1.100" placeholder="" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div><div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">PUERTO</label><input type="text" id="mbPort" class="form-control" value="502" placeholder="" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div><div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">UNIT ID</label><input type="text" id="mbUnit" class="form-control" value="1" placeholder="" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div><div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">TIMEOUT (ms)</label><input type="text" id="mbTimeout" class="form-control" value="3000" placeholder="" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div><div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px"><div><div style="font-size:13px;color:var(--text-primary,#e2e8f0)">Reconexión automática</div><div style="font-size:11px;color:var(--text-muted,#64748b)">Reintentar cada 30s</div></div><div style="background:var(--accent-green,#34d399);width:40px;height:22px;border-radius:11px;position:relative;cursor:pointer;flex-shrink:0"><div style="width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:2px;right:2px;box-shadow:0 1px 3px rgba(0,0,0,0.3)"></div></div></div>
+          <div style="display:flex;gap:8px;margin-top:4px">
+            <button onclick="showNotif('Probando MODBUS TCP...','info')" style="background:none;border:1px solid var(--border,rgba(255,255,255,0.08));color:var(--text-secondary,#94a3b8);border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;flex:1;font-size:12px;padding:8px">Test Ping</button>
+            <button onclick="showNotif('Guardado','success')" style="background:var(--primary,#638bff);border:none;color:#fff;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer;flex:1;font-size:12px;padding:8px">Guardar</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel fade-in" style="margin-bottom:0">
+        <div class="panel-header">
+          <div class="panel-title">OPC-UA</div>
+          <span style="font-size:11px;padding:2px 10px;background:rgba(52,211,153,0.12);color:var(--accent-green);border-radius:10px;border:1px solid rgba(52,211,153,0.25);font-family:'JetBrains Mono',monospace;font-weight:600">● CONECTADO</span>
+        </div>
+        <div class="panel-body" style="display:flex;flex-direction:column;gap:12px">
+          <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">ENDPOINT URL</label><input type="text" id="opcUrl" class="form-control" value="opc.tcp://plc01:4840" placeholder="" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div><div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">SECURITY MODE</label><select id="opcSec" class="form-select" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;font-family:'Inter',sans-serif"><option>None</option><option>Sign</option><option>SignAndEncrypt</option></select></div><div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">USUARIO</label><input type="text" id="opcUser" class="form-control" value="opcuser" placeholder="" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div><div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">CONTRASEÑA</label><input type="password" id="opcPass" class="form-control" value="" placeholder="••••••" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div>
+          <div style="display:flex;gap:8px;margin-top:4px">
+            <button onclick="showNotif('Probando OPC-UA...','info')" style="background:none;border:1px solid var(--border,rgba(255,255,255,0.08));color:var(--text-secondary,#94a3b8);border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;flex:1;font-size:12px;padding:8px">Test Ping</button>
+            <button onclick="showNotif('Guardado','success')" style="background:var(--primary,#638bff);border:none;color:#fff;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer;flex:1;font-size:12px;padding:8px">Guardar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:0">
+      <div class="panel fade-in" style="margin-bottom:0">
+        <div class="panel-header">
+          <div class="panel-title">MQTT Broker</div>
+          <span style="font-size:11px;padding:2px 10px;background:rgba(52,211,153,0.12);color:var(--accent-green);border-radius:10px;border:1px solid rgba(52,211,153,0.25);font-family:'JetBrains Mono',monospace;font-weight:600">● CONECTADO</span>
+        </div>
+        <div class="panel-body" style="display:flex;flex-direction:column;gap:12px">
+          <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">BROKER HOST</label><input type="text" id="mqttHost" class="form-control" value="broker.nexscada.com" placeholder="" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div><div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">PUERTO</label><input type="text" id="mqttPort" class="form-control" value="8883" placeholder="" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div><div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">TOPIC BASE</label><input type="text" id="mqttTopic" class="form-control" value="planta/area100/#" placeholder="" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div><div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">QoS</label><select id="mqttQos" class="form-select" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;font-family:'Inter',sans-serif"><option>QoS 0 — At most once</option><option>QoS 1 — At least once</option><option>QoS 2 — Exactly once</option></select></div>
+          <div style="display:flex;gap:8px;margin-top:4px">
+            <button onclick="showNotif('Probando MQTT Broker...','info')" style="background:none;border:1px solid var(--border,rgba(255,255,255,0.08));color:var(--text-secondary,#94a3b8);border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;flex:1;font-size:12px;padding:8px">Test Ping</button>
+            <button onclick="showNotif('Guardado','success')" style="background:var(--primary,#638bff);border:none;color:#fff;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer;flex:1;font-size:12px;padding:8px">Guardar</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel fade-in" style="margin-bottom:0">
+        <div class="panel-header">
+          <div class="panel-title">PLC-04</div>
+          <span style="font-size:11px;padding:2px 10px;background:rgba(248,113,113,0.12);color:var(--accent-red);border-radius:10px;border:1px solid rgba(248,113,113,0.25);font-family:'JetBrains Mono',monospace;font-weight:600">● ERROR</span>
+        </div>
+        <div class="panel-body" style="display:flex;flex-direction:column;gap:12px">
+          <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">PROTOCOLO</label><select id="plc4Proto" class="form-select" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;font-family:'Inter',sans-serif"><option>MODBUS RTU</option><option>MODBUS TCP</option><option>S7 (Siemens)</option><option>EtherNet/IP</option></select></div><div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">IP / HOST</label><input type="text" id="plc4Host" class="form-control" value="192.168.1.104" placeholder="" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div><div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">PUERTO</label><input type="text" id="plc4Port" class="form-control" value="102" placeholder="" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div><div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px"><div><div style="font-size:13px;color:var(--text-primary,#e2e8f0)">Reconexión automática</div><div style="font-size:11px;color:var(--text-muted,#64748b)">Reintentar cada 30s</div></div><div style="background:var(--accent-green,#34d399);width:40px;height:22px;border-radius:11px;position:relative;cursor:pointer;flex-shrink:0"><div style="width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:2px;right:2px;box-shadow:0 1px 3px rgba(0,0,0,0.3)"></div></div></div>
+          <div style="display:flex;gap:8px;margin-top:4px">
+            <button onclick="showNotif('Probando PLC-04...','info')" style="background:none;border:1px solid var(--border,rgba(255,255,255,0.08));color:var(--text-secondary,#94a3b8);border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;flex:1;font-size:12px;padding:8px">Reconectar</button>
+            <button onclick="showNotif('PLC-04 guardado','success')" style="background:var(--primary,#638bff);border:none;color:#fff;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer;flex:1;font-size:12px;padding:8px">Guardar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="config-alarms" class="config-pane" style="display:none;padding:0 30px 30px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div class="panel fade-in" style="margin-bottom:0">
+        <div class="panel-header"><div class="panel-title">Umbrales de Proceso</div></div>
+        <div class="panel-body" style="display:flex;flex-direction:column;gap:0">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;color:var(--text-muted,#64748b);margin:16px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border)">TEMPERATURA — TT-101</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+            <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">LO LO (°C)</label><input type="text" id="ttLL" class="form-control" value="80" placeholder="" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div>
+            <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">LO (°C)</label><input type="text" id="ttL" class="form-control" value="100" placeholder="" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div>
+            <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">HI (°C)</label><input type="text" id="ttH" class="form-control" value="380" placeholder="" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div>
+            <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">HI HI (°C)</label><input type="text" id="ttHH" class="form-control" value="400" placeholder="" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div>
+          </div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;color:var(--text-muted,#64748b);margin:16px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border)">PRESIÓN — PT-201</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+            <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">LO (bar)</label><input type="text" id="ptL" class="form-control" value="1.0" placeholder="" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div>
+            <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">HI (bar)</label><input type="text" id="ptH" class="form-control" value="7.0" placeholder="" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div>
+            <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">HI HI (bar)</label><input type="text" id="ptHH" class="form-control" value="8.0" placeholder="" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div>
+            <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">DEADBAND (bar)</label><input type="text" id="ptDB" class="form-control" value="0.1" placeholder="" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div>
+          </div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;color:var(--text-muted,#64748b);margin:16px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border)">NIVEL — LT-401</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">LO LO (%)</label><input type="text" id="ltLL" class="form-control" value="5" placeholder="" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div>
+            <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">HI HI (%)</label><input type="text" id="ltHH" class="form-control" value="95" placeholder="" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel fade-in" style="margin-bottom:0">
+        <div class="panel-header"><div class="panel-title">Comportamiento</div></div>
+        <div class="panel-body" style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px"><div><div style="font-size:13px;color:var(--text-primary,#e2e8f0)">Sonido en alarmas críticas</div><div style="font-size:11px;color:var(--text-muted,#64748b)">Beep para prioridad CRÍTICA y ALTA</div></div><div style="background:var(--accent-green,#34d399);width:40px;height:22px;border-radius:11px;position:relative;cursor:pointer;flex-shrink:0"><div style="width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:2px;right:2px;box-shadow:0 1px 3px rgba(0,0,0,0.3)"></div></div></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px"><div><div style="font-size:13px;color:var(--text-primary,#e2e8f0)">Auto-ACK al resolver</div><div style="font-size:11px;color:var(--text-muted,#64748b)">Reconocer automáticamente cuando vuelve al rango</div></div><div style="background:rgba(255,255,255,0.12);width:40px;height:22px;border-radius:11px;position:relative;cursor:pointer;flex-shrink:0"><div style="width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;box-shadow:0 1px 3px rgba(0,0,0,0.3)"></div></div></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px"><div><div style="font-size:13px;color:var(--text-primary,#e2e8f0)">Notificación por correo</div><div style="font-size:11px;color:var(--text-muted,#64748b)">Email en alarmas críticas</div></div><div style="background:var(--accent-green,#34d399);width:40px;height:22px;border-radius:11px;position:relative;cursor:pointer;flex-shrink:0"><div style="width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:2px;right:2px;box-shadow:0 1px 3px rgba(0,0,0,0.3)"></div></div></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px"><div><div style="font-size:13px;color:var(--text-primary,#e2e8f0)">Inhibir en mantenimiento</div><div style="font-size:11px;color:var(--text-muted,#64748b)">Silenciar durante ventanas programadas</div></div><div style="background:rgba(255,255,255,0.12);width:40px;height:22px;border-radius:11px;position:relative;cursor:pointer;flex-shrink:0"><div style="width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;box-shadow:0 1px 3px rgba(0,0,0,0.3)"></div></div></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px"><div><div style="font-size:13px;color:var(--text-primary,#e2e8f0)">Registro histórico</div><div style="font-size:11px;color:var(--text-muted,#64748b)">Guardar historial en base de datos</div></div><div style="background:var(--accent-green,#34d399);width:40px;height:22px;border-radius:11px;position:relative;cursor:pointer;flex-shrink:0"><div style="width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:2px;right:2px;box-shadow:0 1px 3px rgba(0,0,0,0.3)"></div></div></div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;color:var(--text-muted,#64748b);margin:16px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border)">NOTIFICACIONES</div>
+          <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">EMAIL DESTINO</label><input type="email" id="alarmEmail" class="form-control" value="ops@empresa.com" placeholder="correo@empresa.com" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div>
+          <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">DELAY ANTES DE NOTIFICAR (s)</label><input type="text" id="alarmDelay" class="form-control" value="30" placeholder="" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div>
+          <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">PRIORIDAD MÍNIMA</label><select id="alarmMinPrio" class="form-select" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;font-family:'Inter',sans-serif"><option>Baja</option><option>Media</option><option>Alta</option><option>Crítica</option></select></div>
+          <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">RETENCIÓN HISTORIAL (días)</label><input type="text" id="alarmRet" class="form-control" value="365" placeholder="" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px"><button style="background:none;border:1px solid var(--border,rgba(255,255,255,0.08));color:var(--text-secondary,#94a3b8);border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer">Restablecer</button><button onclick="showNotif('Guardado correctamente','success')" style="background:var(--primary,#638bff);border:none;color:#fff;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer">Guardar Cambios</button></div>
+  </div>
+
+  <div id="config-users" class="config-pane" style="display:none;padding:0 30px 30px">
+    <div class="panel fade-in">
+      <div class="panel-header">
+        <div class="panel-title">Gestión de Usuarios</div>
+        <div class="panel-badge count">3</div>
+        <div class="panel-spacer"></div>
+        <button onclick="showNotif('Formulario de nuevo usuario próximamente','info')" style="background:var(--primary,#638bff);border:none;color:#fff;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer;font-size:12px;padding:6px 14px">
+          <i data-feather="user-plus" style="width:13px;height:13px"></i> Nuevo Usuario
+        </button>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="table table-dark table-hover align-middle" style="font-size:13px">
+          <thead style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.08em;color:var(--text-muted,#64748b)">
+            <tr><th></th><th>NOMBRE</th><th>USUARIO</th><th>ROL</th><th>ÚLTIMO ACCESO</th><th>ESTADO</th><th class="text-end">ACCIONES</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+      <td><div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--primary,#638bff),#a78bfa);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff">AD</div></td>
+      <td style="font-weight:500;color:var(--text-primary,#e2e8f0)">Admin User</td>
+      <td style="font-family:'JetBrains Mono',monospace;color:var(--text-secondary,#94a3b8)">admin</td>
+      <td><span style="font-size:10px;padding:2px 8px;background:var(--primary)20;color:var(--primary);border-radius:10px;border:1px solid var(--primary)44;font-family:'JetBrains Mono',monospace;font-weight:600">ADMIN</span></td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted,#64748b)">Hoy 12:00</td>
+      <td><span style="font-size:10px;padding:2px 8px;background:rgba(52,211,153,0.12);color:var(--accent-green);border-radius:10px;font-weight:600">ACTIVO</span></td>
+      <td class="text-end"><button style="background:none;border:1px solid var(--border);color:var(--text-secondary,#94a3b8);border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer;margin-right:4px">Editar</button><button style="background:none;border:1px solid rgba(239,68,68,0.3);color:var(--accent-red);border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer">Desactivar</button></td>
+    </tr>
+            <tr>
+      <td><div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#10b981,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff">OP</div></td>
+      <td style="font-weight:500;color:var(--text-primary,#e2e8f0)">Operador 01</td>
+      <td style="font-family:'JetBrains Mono',monospace;color:var(--text-secondary,#94a3b8)">operador01</td>
+      <td><span style="font-size:10px;padding:2px 8px;background:var(--accent-green)20;color:var(--accent-green);border-radius:10px;border:1px solid var(--accent-green)44;font-family:'JetBrains Mono',monospace;font-weight:600">OPERADOR</span></td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted,#64748b)">Ayer 18:32</td>
+      <td><span style="font-size:10px;padding:2px 8px;background:rgba(52,211,153,0.12);color:var(--accent-green);border-radius:10px;font-weight:600">ACTIVO</span></td>
+      <td class="text-end"><button style="background:none;border:1px solid var(--border);color:var(--text-secondary,#94a3b8);border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer;margin-right:4px">Editar</button><button style="background:none;border:1px solid rgba(239,68,68,0.3);color:var(--accent-red);border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer">Desactivar</button></td>
+    </tr>
+            <tr>
+      <td><div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#f59e0b,#ef4444);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff">SV</div></td>
+      <td style="font-weight:500;color:var(--text-primary,#e2e8f0)">Supervisor</td>
+      <td style="font-family:'JetBrains Mono',monospace;color:var(--text-secondary,#94a3b8)">supervisor</td>
+      <td><span style="font-size:10px;padding:2px 8px;background:var(--accent-amber)20;color:var(--accent-amber);border-radius:10px;border:1px solid var(--accent-amber)44;font-family:'JetBrains Mono',monospace;font-weight:600">SUPERVISOR</span></td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted,#64748b)">Hace 2 días</td>
+      <td><span style="font-size:10px;padding:2px 8px;background:rgba(52,211,153,0.12);color:var(--accent-green);border-radius:10px;font-weight:600">ACTIVO</span></td>
+      <td class="text-end"><button style="background:none;border:1px solid var(--border);color:var(--text-secondary,#94a3b8);border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer;margin-right:4px">Editar</button><button style="background:none;border:1px solid rgba(239,68,68,0.3);color:var(--accent-red);border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer">Desactivar</button></td>
+    </tr>
+            <tr>
+      <td><div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#64748b,#475569);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff">VR</div></td>
+      <td style="font-weight:500;color:var(--text-secondary,#94a3b8)">Visor Reportes</td>
+      <td style="font-family:'JetBrains Mono',monospace;color:var(--text-secondary,#94a3b8)">viewer01</td>
+      <td><span style="font-size:10px;padding:2px 8px;background:var(--text-muted)20;color:var(--text-muted);border-radius:10px;border:1px solid var(--text-muted)44;font-family:'JetBrains Mono',monospace;font-weight:600">VIEWER</span></td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted,#64748b)">Hace 3 días</td>
+      <td><span style="font-size:10px;padding:2px 8px;background:rgba(100,116,139,0.12);color:var(--text-muted);border-radius:10px;font-weight:600">INACTIVO</span></td>
+      <td class="text-end"><button style="background:none;border:1px solid var(--border);color:var(--text-secondary,#94a3b8);border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer;margin-right:4px">Editar</button><button onclick="showNotif('Usuario activado','success')" style="background:none;border:1px solid rgba(52,211,153,0.3);color:var(--accent-green);border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer">Activar</button></td>
+    </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="panel fade-in">
+      <div class="panel-header"><div class="panel-title">Permisos por Rol</div></div>
+      <div style="overflow-x:auto">
+        <table class="table table-dark align-middle" style="font-size:12px">
+          <thead style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.08em;color:var(--text-muted,#64748b)">
+            <tr><th>PERMISO</th><th class="text-center">ADMIN</th><th class="text-center">OPERADOR</th><th class="text-center">SUPERVISOR</th><th class="text-center">VIEWER</th></tr>
+          </thead>
+          <tbody><tr><td style="font-size:13px;color:var(--text-secondary,#94a3b8)">Ver Dashboard</td><td class="text-center"><span style="color:var(--accent-green);font-size:14px">✓</span></td><td class="text-center"><span style="color:var(--accent-green);font-size:14px">✓</span></td><td class="text-center"><span style="color:var(--accent-green);font-size:14px">✓</span></td><td class="text-center"><span style="color:var(--accent-green);font-size:14px">✓</span></td></tr><tr><td style="font-size:13px;color:var(--text-secondary,#94a3b8)">ACK Alarmas</td><td class="text-center"><span style="color:var(--accent-green);font-size:14px">✓</span></td><td class="text-center"><span style="color:var(--accent-green);font-size:14px">✓</span></td><td class="text-center"><span style="color:var(--accent-green);font-size:14px">✓</span></td><td class="text-center"><span style="color:var(--text-disabled,#334155);font-size:14px">—</span></td></tr><tr><td style="font-size:13px;color:var(--text-secondary,#94a3b8)">Configurar Tags</td><td class="text-center"><span style="color:var(--accent-green);font-size:14px">✓</span></td><td class="text-center"><span style="color:var(--text-disabled,#334155);font-size:14px">—</span></td><td class="text-center"><span style="color:var(--accent-green);font-size:14px">✓</span></td><td class="text-center"><span style="color:var(--text-disabled,#334155);font-size:14px">—</span></td></tr><tr><td style="font-size:13px;color:var(--text-secondary,#94a3b8)">Gestionar Usuarios</td><td class="text-center"><span style="color:var(--accent-green);font-size:14px">✓</span></td><td class="text-center"><span style="color:var(--text-disabled,#334155);font-size:14px">—</span></td><td class="text-center"><span style="color:var(--text-disabled,#334155);font-size:14px">—</span></td><td class="text-center"><span style="color:var(--text-disabled,#334155);font-size:14px">—</span></td></tr><tr><td style="font-size:13px;color:var(--text-secondary,#94a3b8)">Subir Archivos</td><td class="text-center"><span style="color:var(--accent-green);font-size:14px">✓</span></td><td class="text-center"><span style="color:var(--accent-green);font-size:14px">✓</span></td><td class="text-center"><span style="color:var(--text-disabled,#334155);font-size:14px">—</span></td><td class="text-center"><span style="color:var(--text-disabled,#334155);font-size:14px">—</span></td></tr><tr><td style="font-size:13px;color:var(--text-secondary,#94a3b8)">Exportar Reportes</td><td class="text-center"><span style="color:var(--accent-green);font-size:14px">✓</span></td><td class="text-center"><span style="color:var(--accent-green);font-size:14px">✓</span></td><td class="text-center"><span style="color:var(--accent-green);font-size:14px">✓</span></td><td class="text-center"><span style="color:var(--accent-green);font-size:14px">✓</span></td></tr><tr><td style="font-size:13px;color:var(--text-secondary,#94a3b8)">Configurar Sistema</td><td class="text-center"><span style="color:var(--accent-green);font-size:14px">✓</span></td><td class="text-center"><span style="color:var(--text-disabled,#334155);font-size:14px">—</span></td><td class="text-center"><span style="color:var(--text-disabled,#334155);font-size:14px">—</span></td><td class="text-center"><span style="color:var(--text-disabled,#334155);font-size:14px">—</span></td></tr><tr><td style="font-size:13px;color:var(--text-secondary,#94a3b8)">Eliminar Datos</td><td class="text-center"><span style="color:var(--accent-green);font-size:14px">✓</span></td><td class="text-center"><span style="color:var(--text-disabled,#334155);font-size:14px">—</span></td><td class="text-center"><span style="color:var(--text-disabled,#334155);font-size:14px">—</span></td><td class="text-center"><span style="color:var(--text-disabled,#334155);font-size:14px">—</span></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="config-system" class="config-pane" style="display:none;padding:0 30px 30px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div class="panel fade-in" style="margin-bottom:0">
+        <div class="panel-header"><div class="panel-title">Servidor y Red</div></div>
+        <div class="panel-body" style="display:flex;flex-direction:column;gap:12px">
+          <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">HOSTNAME</label><input type="text" id="sysHost" class="form-control" value="scada-server-01" placeholder="" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div>
+          <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">PUERTO WEBSOCKET</label><input type="text" id="sysWsPort" class="form-control" value="8080" placeholder="" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div>
+          <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">INTERVALO SCAN (ms)</label><input type="text" id="sysScan" class="form-control" value="1000" placeholder="" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div>
+          <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">ZONA HORARIA</label><select id="sysTz" class="form-select" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;font-family:'Inter',sans-serif"><option>America/Bogota (UTC-5)</option><option>America/Lima (UTC-5)</option><option>America/Caracas (UTC-4)</option><option>Europe/Madrid (UTC+1)</option><option>UTC</option></select></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px"><div><div style="font-size:13px;color:var(--text-primary,#e2e8f0)">HTTPS / WSS</div><div style="font-size:11px;color:var(--text-muted,#64748b)">TLS 1.3 · AES-256</div></div><div style="background:var(--accent-green,#34d399);width:40px;height:22px;border-radius:11px;position:relative;cursor:pointer;flex-shrink:0"><div style="width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:2px;right:2px;box-shadow:0 1px 3px rgba(0,0,0,0.3)"></div></div></div>
+        </div>
+      </div>
+      <div class="panel fade-in" style="margin-bottom:0">
+        <div class="panel-header"><div class="panel-title">Base de Datos</div></div>
+        <div class="panel-body" style="display:flex;flex-direction:column;gap:12px">
+          <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">MOTOR</label><select id="dbEngine" class="form-select" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;font-family:'Inter',sans-serif"><option>PostgreSQL 15</option><option>MongoDB 7</option><option>InfluxDB 2.x</option><option>TimescaleDB</option></select></div>
+          <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">HOST DB</label><input type="text" id="dbHost" class="form-control" value="localhost:5432" placeholder="" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div>
+          <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">RETENCIÓN (días)</label><input type="text" id="dbRet" class="form-control" value="365" placeholder="" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div>
+          <div><label style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted,#64748b);display:block;margin-bottom:5px;text-transform:uppercase">POOL CONEXIONES</label><input type="text" id="dbPool" class="form-control" value="10" placeholder="" style="background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-primary,#e2e8f0);width:100%;outline:none;font-family:'Inter',sans-serif"></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px"><div><div style="font-size:13px;color:var(--text-primary,#e2e8f0)">Backup automático</div><div style="font-size:11px;color:var(--text-muted,#64748b)">Cada 24h a las 02:00</div></div><div style="background:var(--accent-green,#34d399);width:40px;height:22px;border-radius:11px;position:relative;cursor:pointer;flex-shrink:0"><div style="width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:2px;right:2px;box-shadow:0 1px 3px rgba(0,0,0,0.3)"></div></div></div>
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div class="panel fade-in" style="margin-bottom:0">
+        <div class="panel-header"><div class="panel-title">Seguridad</div></div>
+        <div class="panel-body" style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px"><div><div style="font-size:13px;color:var(--text-primary,#e2e8f0)">Autenticación JWT</div><div style="font-size:11px;color:var(--text-muted,#64748b)">Tokens con expiración 8h</div></div><div style="background:var(--accent-green,#34d399);width:40px;height:22px;border-radius:11px;position:relative;cursor:pointer;flex-shrink:0"><div style="width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:2px;right:2px;box-shadow:0 1px 3px rgba(0,0,0,0.3)"></div></div></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px"><div><div style="font-size:13px;color:var(--text-primary,#e2e8f0)">Audit Log</div><div style="font-size:11px;color:var(--text-muted,#64748b)">Registro de todas las acciones de usuarios</div></div><div style="background:var(--accent-green,#34d399);width:40px;height:22px;border-radius:11px;position:relative;cursor:pointer;flex-shrink:0"><div style="width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:2px;right:2px;box-shadow:0 1px 3px rgba(0,0,0,0.3)"></div></div></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px"><div><div style="font-size:13px;color:var(--text-primary,#e2e8f0)">Autenticación 2FA</div><div style="font-size:11px;color:var(--text-muted,#64748b)">Código adicional al iniciar sesión</div></div><div style="background:rgba(255,255,255,0.12);width:40px;height:22px;border-radius:11px;position:relative;cursor:pointer;flex-shrink:0"><div style="width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;box-shadow:0 1px 3px rgba(0,0,0,0.3)"></div></div></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg-card,#161b27);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:8px"><div><div style="font-size:13px;color:var(--text-primary,#e2e8f0)">Rate Limiting</div><div style="font-size:11px;color:var(--text-muted,#64748b)">Máx. 100 peticiones/min por IP</div></div><div style="background:var(--accent-green,#34d399);width:40px;height:22px;border-radius:11px;position:relative;cursor:pointer;flex-shrink:0"><div style="width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:2px;right:2px;box-shadow:0 1px 3px rgba(0,0,0,0.3)"></div></div></div>
+        </div>
+      </div>
+      <div class="panel fade-in" style="margin-bottom:0">
+        <div class="panel-header"><div class="panel-title">Estado del Sistema</div><div class="panel-badge live">● EN LÍNEA</div></div>
+        <div class="panel-body">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);"><span style="font-size:13px;color:var(--text-secondary,#94a3b8)">Versión NexSCADA</span><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--primary)">v5.0.1</span></div><div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);"><span style="font-size:13px;color:var(--text-secondary,#94a3b8)">Uptime</span><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent-green)">14d 06h 32m</span></div><div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);"><span style="font-size:13px;color:var(--text-secondary,#94a3b8)">CPU</span><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent-green)">34%</span></div><div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);"><span style="font-size:13px;color:var(--text-secondary,#94a3b8)">Memoria RAM</span><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent-green)">2.1 / 8 GB</span></div><div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);"><span style="font-size:13px;color:var(--text-secondary,#94a3b8)">Almacenamiento</span><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent-amber)">67% — 124 GB</span></div><div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;"><span style="font-size:13px;color:var(--text-secondary,#94a3b8)">Tags activos</span><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-primary)">1,247</span></div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px"><button onclick="showNotif('Reiniciando servidor...','warning')" style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.25);color:var(--accent-red,#f87171);border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer">Reiniciar Servidor</button><button style="background:none;border:1px solid var(--border,rgba(255,255,255,0.08));color:var(--text-secondary,#94a3b8);border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer">Restablecer</button><button onclick="showNotif('Guardado correctamente','success')" style="background:var(--primary,#638bff);border:none;color:#fff;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer">Guardar Cambios</button></div>
+  </div>
+</div>
+
+<!-- ============ CALENDAR TAB ============ -->
+<div id="tab-calendar" class="tab-pane" style="display:none">
+  <div class="section-label">CALENDARIO DE MANTENIMIENTO</div>
+  <!-- KPIs -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px">
+    <div class="panel fade-in" style="margin-bottom:0"><div class="panel-body" style="padding:16px">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:8px">PRÓXIMAS 7 DÍAS</div>
+      <div style="font-family:'Rajdhani',sans-serif;font-size:32px;font-weight:700;color:var(--accent-amber);line-height:1" id="calKpi1">—</div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">Mantenimientos programados</div>
+    </div></div>
+    <div class="panel fade-in" style="margin-bottom:0"><div class="panel-body" style="padding:16px">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:8px">VENCIDOS</div>
+      <div style="font-family:'Rajdhani',sans-serif;font-size:32px;font-weight:700;color:var(--accent-red);line-height:1" id="calKpi2">—</div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">Requieren atención urgente</div>
+    </div></div>
+    <div class="panel fade-in" style="margin-bottom:0"><div class="panel-body" style="padding:16px">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:8px">COMPLETADOS MES</div>
+      <div style="font-family:'Rajdhani',sans-serif;font-size:32px;font-weight:700;color:var(--accent-green);line-height:1" id="calKpi3">—</div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">Este mes</div>
+    </div></div>
+    <div class="panel fade-in" style="margin-bottom:0"><div class="panel-body" style="padding:16px">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:8px">CUMPLIMIENTO</div>
+      <div style="font-family:'Rajdhani',sans-serif;font-size:32px;font-weight:700;color:var(--primary);line-height:1" id="calKpi4">—</div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">Meta: 95%</div>
+    </div></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 340px;gap:16px">
+    <!-- Calendario visual -->
+    <div class="panel fade-in" style="margin-bottom:0">
+      <div class="panel-header">
+        <div class="panel-title" id="calMonthTitle">Cargando...</div>
+        <div class="panel-spacer"></div>
+        <button onclick="shiftMonth(-1)" style="background:none;border:1px solid var(--border);color:var(--text-secondary);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer">‹</button>
+        <button onclick="shiftMonth(1)" style="background:none;border:1px solid var(--border);color:var(--text-secondary);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;margin-left:6px">›</button>
+      </div>
+      <div class="panel-body" style="padding:16px">
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:8px">
+          <div style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-muted);padding:6px 0">LUN</div>
+          <div style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-muted);padding:6px 0">MAR</div>
+          <div style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-muted);padding:6px 0">MIÉ</div>
+          <div style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-muted);padding:6px 0">JUE</div>
+          <div style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-muted);padding:6px 0">VIE</div>
+          <div style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-muted);padding:6px 0">SÁB</div>
+          <div style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-muted);padding:6px 0">DOM</div>
+        </div>
+        <div id="calGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px"></div>
+        <script>
+        (function(){
+          var calYear=2026, calMonth=2;
+          window.shiftMonth=function(dir){
+            calMonth+=dir;
+            if(calMonth>11){calMonth=0;calYear++;}
+            if(calMonth<0){calMonth=11;calYear--;}
+            renderCalFull();
+          };
+          window.renderCalWithManager=function(){ renderCalFull(); };
+          function renderCalFull(){
+            var names=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+            var titleEl=document.getElementById('calMonthTitle');
+            if(titleEl) titleEl.innerText=names[calMonth]+' '+calYear;
+            var grid=document.getElementById('calGrid');
+            if(!grid) return;
+            // Get dots from CalendarManager if available
+            var dots={};
+            if(typeof CalendarManager!=='undefined'){
+              dots=CalendarManager.getDotsForMonth(calYear,calMonth);
+              updateCalKpis();
+            }
+            var colorMap={warning:'var(--accent-amber)',danger:'var(--accent-red)',success:'var(--accent-green)',primary:'var(--primary)'};
+            var firstDay=new Date(calYear,calMonth,1).getDay();
+            var offset=firstDay===0?6:firstDay-1;
+            var days=new Date(calYear,calMonth+1,0).getDate();
+            var todayObj=new Date();
+            var isCurMonth=(todayObj.getFullYear()===calYear&&todayObj.getMonth()===calMonth);
+            var todayD=isCurMonth?todayObj.getDate():-1;
+            var html='';
+            for(var i=0;i<offset;i++) html+='<div></div>';
+            for(var d=1;d<=days;d++){
+              var isT=d===todayD;
+              var ev=dots[d];
+              var dot=ev?('<div style="width:5px;height:5px;border-radius:50%;background:'+colorMap[ev]+';margin:2px auto 0"></div>'):'';
+              html+='<div class="cal-day" data-today="'+isT+'" style="text-align:center;padding:7px 2px;border-radius:8px;font-size:13px;cursor:pointer;background:'+(isT?'var(--primary)':'transparent')+';color:'+(isT?'#fff':'var(--text-secondary)')+';font-weight:'+(isT?'700':'400')+'">'+d+dot+'</div>';
+            }
+            grid.innerHTML=html;
+            grid.querySelectorAll('.cal-day[data-today="false"]').forEach(function(el){
+              el.addEventListener('mouseover',function(){this.style.background='rgba(255,255,255,0.06)';});
+              el.addEventListener('mouseout',function(){this.style.background='transparent';});
+            });
+            // Also refresh event list
+            if(typeof CalendarManager!=='undefined') CalendarManager.renderEventList();
+          }
+          function updateCalKpis(){
+            if(typeof CalendarManager==='undefined') return;
+            var all=CalendarManager.getAll();
+            var now=new Date();
+            var in7=new Date(); in7.setDate(in7.getDate()+7);
+            var upcoming=all.filter(function(e){ var d=new Date(e.date+'T12:00:00'); return d>=now&&d<=in7&&e.status!=='done'; });
+            var overdue=all.filter(function(e){ var d=new Date(e.date+'T12:00:00'); return d<now&&e.status!=='done'; });
+            var done=all.filter(function(e){ return e.status==='done'; });
+            var total=all.length;
+            var pct=total>0?Math.round((done.length/total)*100):0;
+            var set=function(id,v){var el=document.getElementById(id);if(el)el.textContent=v;};
+            set('calKpi1',upcoming.length);
+            set('calKpi2',overdue.length);
+            set('calKpi3',done.length);
+            set('calKpi4',pct+'%');
+          }
+          // Initial render
+          setTimeout(function(){ renderCalFull(); },100);
+        })();
+        </script>
+        <div style="display:flex;gap:16px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+          <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted)"><div style="width:8px;height:8px;border-radius:50%;background:var(--accent-amber)"></div>Preventivo</div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted)"><div style="width:8px;height:8px;border-radius:50%;background:var(--accent-red)"></div>Urgente</div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted)"><div style="width:8px;height:8px;border-radius:50%;background:var(--accent-green)"></div>Completado</div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted)"><div style="width:8px;height:8px;border-radius:50%;background:var(--primary)"></div>Inspección</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Eventos + técnicos -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="panel fade-in" style="margin-bottom:0">
+        <div class="panel-header">
+          <div class="panel-title">Próximos Eventos</div>
+          <button onclick="CalendarManager.openAdd()" style="margin-left:auto;background:var(--primary);border:none;color:#fff;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer">+ Agregar</button>
+        </div>
+        <!-- CalendarManager llena este div -->
+        <div id="calEventList" style="max-height:320px;overflow-y:auto"></div>
+      </div>
+      <div class="panel fade-in" style="margin-bottom:0">
+        <div class="panel-header"><div class="panel-title">Técnicos Asignados</div></div>
+        <div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--primary),#a78bfa);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0">JP</div>
+            <div><div style="font-size:13px;font-weight:500;color:var(--text-primary)">Juan Pérez</div><div style="font-size:11px;color:var(--accent-green)">● Disponible</div></div>
+            <span style="margin-left:auto;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text-muted)">2 tareas</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#10b981,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0">MR</div>
+            <div><div style="font-size:13px;font-weight:500;color:var(--text-primary)">María Rodríguez</div><div style="font-size:11px;color:var(--accent-amber)">● En campo</div></div>
+            <span style="margin-left:auto;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text-muted)">1 tarea</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#f59e0b,#ef4444);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0">CA</div>
+            <div><div style="font-size:13px;font-weight:500;color:var(--text-primary)">Carlos Aguilar</div><div style="font-size:11px;color:var(--text-muted)">● Fuera de turno</div></div>
+            <span style="margin-left:auto;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text-muted)">0 tareas</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ NOTIFICATIONS TAB ============ -->
+<div id="tab-notifications" class="tab-pane" style="display:none">
+  <div class="section-label">CENTRO DE NOTIFICACIONES</div>
+  <div class="panel fade-in">
+    <div class="panel-header">
+      <div class="panel-title">Notificaciones</div>
+      <div class="panel-badge count" id="notifCount">7</div>
+    </div>
+    <div class="panel-body" style="min-height:300px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px">
+      <i data-feather="message-square" style="width:48px;height:48px;color:var(--primary);opacity:0.5"></i>
+      <p class="text-muted">Panel de historial de notificaciones y alertas del sistema.</p>
+      <p style="font-size:12px;color:var(--text-disabled)">Próxima versión</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ FILES TAB ============ -->
+<div id="tab-files" class="tab-pane" style="display:none; height: calc(100vh - 80px);">
+  <div class="row g-0 h-100" style="border-radius: var(--r-xl); border: 1px solid var(--border-subtle); overflow: hidden;">
+    <!-- File Manager Sidebar -->
+    <div class="col-md-3 col-lg-2 border-end h-100 p-0" style="background:rgba(0,0,0,0.15);border-color:var(--border-subtle) !important;display:flex;flex-direction:column">
+
+      <!-- Brand -->
+      <div style="padding:16px 14px 10px">
+        <div style="font-size:13px;font-weight:700;color:var(--text-primary,#e2e8f0);display:flex;align-items:center;gap:8px">
+          <i data-feather="folder" style="width:15px;height:15px;color:var(--primary,#638bff)"></i>
+          File Manager
+        </div>
+        <div style="font-size:11px;color:var(--text-disabled,#475569);margin-top:2px;padding-left:23px">Gestión de archivos</div>
+      </div>
+
+      <!-- Nav — con data-view para el toggle de estilos -->
+      <div style="padding:4px 8px;display:flex;flex-direction:column;gap:2px;flex:1">
+        <a href="#" class="fm-nav-item" data-view="all"
+          onclick="window.fmSetView('all',this)"
+          style="display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;font-size:13px;font-weight:600;color:var(--primary,#638bff);background:rgba(99,139,255,0.1);text-decoration:none">
+          <i data-feather="folder" style="width:14px;height:14px;flex-shrink:0"></i>Todos los archivos
+        </a>
+        <a href="#" class="fm-nav-item" data-view="recent"
+          onclick="window.fmSetView('recent',this)"
+          style="display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;font-size:13px;color:var(--text-secondary,#94a3b8);text-decoration:none"
+          onmouseover="this.style.background='rgba(255,255,255,0.04)'" onmouseout="if(window._fmView!=='recent')this.style.background='transparent'">
+          <i data-feather="clock" style="width:14px;height:14px;flex-shrink:0"></i>Recientes
+        </a>
+        <a href="#" class="fm-nav-item" data-view="starred"
+          onclick="window.fmSetView('starred',this)"
+          style="display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;font-size:13px;color:var(--text-secondary,#94a3b8);text-decoration:none"
+          onmouseover="this.style.background='rgba(255,255,255,0.04)'" onmouseout="if(window._fmView!=='starred')this.style.background='transparent'">
+          <i data-feather="star" style="width:14px;height:14px;flex-shrink:0"></i>Destacados
+        </a>
+      </div>
+    </div>
+    <!-- File Manager Main -->
+    <div class="col-md-9 col-lg-10 h-100 d-flex flex-column" style="background:var(--bg-surface)">
+      <div class="d-flex justify-content-between align-items-center p-4" style="border-bottom:1px solid var(--border-subtle)">
+        <div class="input-group" style="width:300px">
+          <span class="input-group-text" style="background:var(--bg-input);border-color:var(--border-subtle);color:var(--text-muted);border-right:none;border-radius:var(--r-md) 0 0 var(--r-md)">
+            <i data-feather="search" class="feather-xs"></i>
+          </span>
+          <input type="text" class="form-control shadow-none" placeholder="Buscar archivos..." style="background:var(--bg-input);border-color:var(--border-subtle);color:var(--text-primary);border-left:none;border-radius:0 var(--r-md) var(--r-md) 0;font-size:13px">
+        </div>
+        <div class="d-flex gap-3">
+          <button class="btn d-flex align-items-center" style="background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);color:var(--text-secondary);font-size:13px" onclick="window.newFolderModal()">
+            <i data-feather="folder-plus" class="feather-sm me-2"></i>New Folder
+          </button>
+          <input type="file" id="fmUploadInput" style="display:none" onchange="window.uploadFile()">
+          <button class="btn btn-primary d-flex align-items-center" style="font-size:13px;font-weight:600;box-shadow:var(--primary-glow)" onclick="document.getElementById('fmUploadInput').click()">
+            <i data-feather="upload" class="feather-sm me-2"></i>Upload
+          </button>
+        </div>
+      </div>
+      <div class="flex-grow-1 p-4 overflow-auto">
+        <h6 class="text-white mb-4 d-flex align-items-center">
+          <i data-feather="home" class="feather-sm me-2"></i>Archivos
+        </h6>
+        <div id="fmList" class="widget-grid" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px;min-height:auto">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <!-- VAR EDITOR MODAL -->
+  <div id="varEditorModal" class="fm-modal-over">
+    <div class="fm-modal show" style="max-width:500px">
+      <div class="modal-header border-bottom mb-3 pb-2">
+        <h5 class="modal-title" id="varEditorTitle">Gestor de Variable</h5>
+      </div>
+      <div class="modal-body text-start">
+        <div class="mb-3">
+          <label class="form-label">ID de la Variable</label>
+          <input type="text" id="varEditorId" class="form-control bg-input border-subtle text-white" placeholder="ej. Var1">
+          <small class="text-muted" style="font-size:10px">El ID se genera automáticamente para nuevas variables.</small>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Tag Name</label>
+          <input type="text" id="editVarTag" class="form-control bg-input border-subtle text-white">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Descripción</label>
+          <textarea id="editVarDesc" class="form-control bg-input border-subtle text-white" rows="2"></textarea>
+        </div>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Unidad</label>
+            <input type="text" id="editVarUnit" class="form-control bg-input border-subtle text-white" placeholder="ej. pH, °C">
+          </div>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">ID Dispositivo</label>
+            <input type="text" id="editVarIdDisp" class="form-control bg-input border-subtle text-white" placeholder="ej. 95">
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Tabla DB</label>
+            <input type="text" id="editVarTable" class="form-control bg-input border-subtle text-white" placeholder="ej. variable2">
+          </div>
+        </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Columna DB</label>
+            <input type="text" id="editVarColumn" class="form-control bg-input border-subtle text-white" placeholder="ej. var2">
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Registro (VAR20)</label>
+            <input type="text" id="editVarVar20" class="form-control bg-input border-subtle text-white" placeholder="ej. 1 o 2">
+          </div>
+        </div>
+        <div class="mb-3 form-check form-switch mt-3 pt-2 border-top" style="border-color: var(--border-subtle) !important;">
+          <input class="form-check-input" type="checkbox" id="editVarToGraph" checked>
+          <label class="form-check-label" for="editVarToGraph" style="color:var(--text-secondary)">Mostrar en Gráfica de Tendencias</label>
+        </div>
+      </div>
+      <div class="modal-footer border-top mt-3 pt-3 d-flex gap-2">
+        <button class="btn btn-outline-secondary flex-1" onclick="document.getElementById('varEditorModal').style.display='none'">Cancelar</button>
+        <button class="btn btn-primary flex-1" onclick="saveVarEditor()">Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+  <!-- Lógica SCADA (orden importante) -->
+  <script src="js/layout.js"></script>
+  <script src="js/notifications.js"></script>
+  <script src="js/integration-bus.js"></script>
+  <script src="js/config-panel.js"></script>
+  <script src="js/viewer-3d.js"></script>
+  <script src="js/pid-manager.js"></script>
+  <script src="js/scada-core.js"></script>
+  <script src="js/variable-manager.js"></script>
+  <script src="js/file-manager.js"></script>
+  <!-- Stubs de funciones llamadas en HTML pero definidas en JS externos -->
+  <script>
+    // Stub: se sobreescribe si file-manager.js define la función real
+    if (!window.openAddWidgetModal) {
+      window.openAddWidgetModal = function() {
+        window.showNotif && window.showNotif('Dashboard Builder: selecciona un widget del catálogo', 'info');
+      };
+    }
+    if (!window.newFolderModal) {
+      window.newFolderModal = function() {
+        var name = prompt('Nombre de la nueva carpeta:');
+        if (name && window.createFolder) window.createFolder(name);
+        else if (name) window.showNotif && window.showNotif('Carpeta "' + name + '" creada', 'success');
+      };
+    }
+  </script>
+  <!-- Managers funcionales -->
+  <script src="js/calendar-manager.js"></script>
+  <script src="js/alarm-manager.js"></script>
+  <script src="js/notifications-manager.js"></script>
+  <!-- i18n + login (generado por Webpack) -->
+  <script src="js/dashboard-manager.js"></script>
+  <script src="js/historicos-manager.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
+
+

@@ -331,12 +331,13 @@ function _setupPIDTools() {
     URL.revokeObjectURL(url);
   }));
 
-  // Pantalla completa
+  // Pantalla completa — incluye toolbar (fullscreen sobre el panel completo)
   group.appendChild(mkBtn('Pantalla completa', '⛶⛶', () => {
     const container = document.getElementById('pidContainer');
-    if (!container) return;
+    const panel = container?.closest('.panel') || container;
+    if (!panel) return;
     if (document.fullscreenElement) document.exitFullscreen();
-    else container.requestFullscreen?.();
+    else panel.requestFullscreen?.();
   }));
 
   toolbar.insertBefore(group, document.getElementById('pidResetZoom') || toolbar.lastElementChild);

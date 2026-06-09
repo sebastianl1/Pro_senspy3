@@ -156,6 +156,7 @@ function _addSVGPanZoom(svg) {
   const resetBtn = document.getElementById('pidResetZoom');
   if (resetBtn) resetBtn.onclick = () => window._pidView.reset();
 }
+window._addSVGPanZoom = _addSVGPanZoom;
 
 // ─── CAPA DE ANOTACIÓN (dibujo libre sobre el P&ID) ──────────────
 function _ensureAnnotationLayer() {

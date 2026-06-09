@@ -156,6 +156,7 @@ function _addSVGPanZoom(svg) {
   const resetBtn = document.getElementById('pidResetZoom');
   if (resetBtn) resetBtn.onclick = () => window._pidView.reset();
 }
+window._addSVGPanZoom = _addSVGPanZoom;
 
 // ─── CAPA DE ANOTACIÓN (dibujo libre sobre el P&ID) ──────────────
 function _ensureAnnotationLayer() {
@@ -331,12 +332,13 @@ function _setupPIDTools() {
     URL.revokeObjectURL(url);
   }));
 
-  // Pantalla completa
+  // Pantalla completa — incluye toolbar (fullscreen sobre el panel completo)
   group.appendChild(mkBtn('Pantalla completa', '⛶⛶', () => {
     const container = document.getElementById('pidContainer');
-    if (!container) return;
+    const panel = container?.closest('.panel') || container;
+    if (!panel) return;
     if (document.fullscreenElement) document.exitFullscreen();
-    else container.requestFullscreen?.();
+    else panel.requestFullscreen?.();
   }));
 
   toolbar.insertBefore(group, document.getElementById('pidResetZoom') || toolbar.lastElementChild);
@@ -484,16 +486,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     uploadBtn.onclick = () => fileInput.click();
     if (!uploadBtn.parentElement) toolbar.prepend(uploadBtn);
 
-    // Botón "Modelos 3D" — gestiona/elimina archivos .glb desde el P&ID
-    if (!document.getElementById('pidGLBManageBtn')) {
-      const glbBtn = document.createElement('button');
-      glbBtn.id = 'pidGLBManageBtn';
-      glbBtn.className = 'btn btn-sm';
-      glbBtn.style.cssText = 'border:1px solid var(--border);color:var(--text-secondary);background:transparent;font-size:12px;display:flex;align-items:center;gap:6px;margin-right:6px';
-      glbBtn.innerHTML = 'OPERACIONES UNITARIAS';
-      glbBtn.title = 'Gestionar / eliminar modelos .glb';
-      glbBtn.onclick = () => window.openGLBModal && window.openGLBModal();
-      toolbar.prepend(glbBtn);
+    // Botón "OPERACIONES UNITARIAS" — gestiona archivos .svg de unidades
+    if (!document.getElementById('pidOpUnitBtn')) {
+      const opBtn = document.createElement('button');
+      opBtn.id = 'pidOpUnitBtn';
+      opBtn.className = 'btn btn-sm';
+      opBtn.style.cssText = 'border:1px solid var(--border);color:var(--text-secondary);background:transparent;font-size:12px;display:flex;align-items:center;gap:6px;margin-right:6px';
+      opBtn.innerHTML = 'OPERACIONES UNITARIAS';
+      opBtn.title = 'Insertar / cargar SVG de operaciones unitarias';
+      opBtn.onclick = () => window.openOpUnitModal && window.openOpUnitModal();
+      toolbar.prepend(opBtn);
     }
 
     // Drag & drop sobre el contenedor del P&ID
@@ -588,3 +590,150 @@ if (window.scadaBus) {
     setTimeout(() => { el.style.filter = prev || ''; }, 1800);
   });
 }
+
+// ─── OPERACIONES UNITARIAS (archivos .svg) ──────────────────────
+window.listOpUnitSVGs = async function() {
+  // Intenta listar primero /operaciones_unitarias y como fallback /pid
+  const paths = ['/operaciones_unitarias', '/op_units', '/pid'];
+  for (const p of paths) {
+    try {
+      const res = await fetch('/api/files/list?path=' + encodeURIComponent(p));
+      if (!res.ok) continue;
+      const files = await res.json();
+      const svgs = (files || []).filter(f => f.name && f.name.toLowerCase().endsWith('.svg'));
+      if (svgs.length) return { path: p, files: svgs };
+    } catch {}
+  }
+  return { path: '/operaciones_unitarias', files: [] };
+};
+
+window.loadOpUnitSVG = async function(path, filename) {
+  try {
+    const res = await fetch(`/api/files/raw?path=${encodeURIComponent(path)}&name=${encodeURIComponent(filename)}`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const svgText = await res.text();
+    const container = document.getElementById('pidContainer');
+    if (!container) return;
+    // Si el P&ID ya tiene un SVG cargado, inserta la operación unitaria dentro;
+    // si no, reemplaza el contenido por el SVG de la operación.
+    const baseSvg = container.querySelector('svg:not(#pidAnnotationLayer)');
+    if (baseSvg) {
+      const wrap = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      wrap.setAttribute('data-op-unit', filename);
+      const tmp = document.createElement('div');
+      tmp.innerHTML = svgText.trim();
+      const newSvg = tmp.querySelector('svg');
+      if (newSvg) {
+        // Mueve los hijos del SVG insertado al grupo
+        Array.from(newSvg.childNodes).forEach(n => wrap.appendChild(n));
+        const vb = (baseSvg.viewBox?.baseVal) || { width: 800, height: 600 };
+        wrap.setAttribute('transform', `translate(${vb.width*0.4},${vb.height*0.4}) scale(0.6)`);
+        baseSvg.appendChild(wrap);
+        window._normalizeSVGColors && window._normalizeSVGColors(baseSvg);
+        window.showNotif?.(`Operación unitaria "${filename}" añadida`, 'success');
+      } else {
+        throw new Error('SVG inválido');
+      }
+    } else {
+      container.innerHTML = svgText;
+      const svgEl = container.querySelector('svg');
+      if (svgEl) {
+        svgEl.style.width  = '100%';
+        svgEl.style.height = '100%';
+        svgEl.style.maxHeight = 'calc(100vh - 200px)';
+        svgEl.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+        window._normalizeSVGColors && window._normalizeSVGColors(svgEl);
+        window._addSVGPanZoom && window._addSVGPanZoom(svgEl);
+      }
+      window._pidCurrentFile = filename;
+      const label = document.getElementById('pidLabel');
+      if (label) label.textContent = filename;
+      window.showNotif?.(`Operación unitaria "${filename}" cargada`, 'success');
+    }
+  } catch (err) {
+    window.showNotif?.('Error: ' + (err.message || err), 'danger');
+  }
+};
+
+window.uploadOpUnitFile = async function(file) {
+  if (!file) return;
+  if (!file.name.toLowerCase().endsWith('.svg')) {
+    window.showNotif?.('Solo se permiten archivos .svg', 'warning');
+    return;
+  }
+  const fd = new FormData();
+  fd.append('file', file);
+  try {
+    const res = await fetch('/api/files/upload?path=/operaciones_unitarias', { method: 'POST', body: fd });
+    if (!res.ok) throw new Error(await res.text());
+    window.showNotif?.(`"${file.name}" guardado`, 'success');
+    window.openOpUnitModal();
+  } catch (err) {
+    window.showNotif?.('Error al subir: ' + (err.message || err), 'danger');
+  }
+};
+
+window.deleteOpUnitSVG = async function(path, filename) {
+  if (!confirm(`¿Eliminar "${filename}"?`)) return;
+  try {
+    const res = await fetch(`/api/files/delete?path=${encodeURIComponent(path)}&name=${encodeURIComponent(filename)}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error(await res.text());
+    window.showNotif?.(`"${filename}" eliminado`, 'success');
+    window.openOpUnitModal();
+  } catch (err) {
+    window.showNotif?.('Error: ' + (err.message || err), 'danger');
+  }
+};
+
+window.openOpUnitModal = async function() {
+  const { path, files } = await window.listOpUnitSVGs();
+
+  let modalEl = document.getElementById('opUnitModal');
+  if (!modalEl) {
+    modalEl = document.createElement('div');
+    modalEl.id = 'opUnitModal';
+    modalEl.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1050;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)';
+    document.body.appendChild(modalEl);
+  }
+
+  const uploadBar = `
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <button id="opUnitUploadBtn" class="btn btn-sm" style="flex:1;background:var(--primary,#3b82f6);color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer">📤 Subir archivo .svg</button>
+      <input type="file" id="opUnitUploadInput" accept=".svg,image/svg+xml" style="display:none" />
+    </div>`;
+
+  const listHTML = files.length === 0
+    ? `<p style="color:var(--text-secondary);font-size:13px;margin:8px 0;text-align:center">No hay archivos .svg en <code>${path}</code>. Sube uno para empezar.</p>`
+    : `<div style="display:flex;flex-direction:column;gap:8px;max-height:340px;overflow-y:auto">${files.map(f => `
+        <div style="padding:10px 12px;border:1px solid var(--border-subtle);border-radius:8px;display:flex;align-items:center;gap:12px">
+          <div style="flex:1;display:flex;align-items:center;gap:10px;cursor:pointer"
+               onclick="window.loadOpUnitSVG('${path}','${f.name.replace(/'/g,"\\'")}');document.getElementById('opUnitModal').remove()">
+            <span style="font-size:20px">⚙️</span>
+            <div>
+              <div style="font-size:13px;font-weight:500;color:var(--text-primary)">${f.name}</div>
+              <div style="font-size:11px;color:var(--text-disabled)">${f.size ? (f.size/1024).toFixed(1) + ' KB SVG' : 'Operación unitaria'}</div>
+            </div>
+          </div>
+          <button title="Eliminar" onclick="event.stopPropagation();window.deleteOpUnitSVG('${path}','${f.name.replace(/'/g,"\\'")}')"
+            style="background:transparent;border:1px solid rgba(239,68,68,0.3);color:#f87171;border-radius:6px;padding:6px 10px;font-size:12px;cursor:pointer">🗑</button>
+        </div>`).join('')}</div>`;
+
+  modalEl.innerHTML = `
+  <div style="background:var(--bg-elevated);border:1px solid var(--border-default);border-radius:16px;padding:24px;width:520px;max-width:95vw">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h5 style="margin:0;font-size:16px;color:var(--text-heading)">Operaciones Unitarias (.svg)</h5>
+      <button onclick="document.getElementById('opUnitModal').remove()" style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:18px">×</button>
+    </div>
+    ${uploadBar}
+    ${listHTML}
+    <div style="margin-top:16px;text-align:right"><button class="btn btn-outline-secondary btn-sm" onclick="document.getElementById('opUnitModal').remove()">Cerrar</button></div>
+  </div>`;
+  modalEl.style.display = 'flex';
+
+  const inp = document.getElementById('opUnitUploadInput');
+  const btn = document.getElementById('opUnitUploadBtn');
+  if (btn && inp) {
+    btn.onclick = () => inp.click();
+    inp.onchange = e => { const f = e.target.files?.[0]; if (f) window.uploadOpUnitFile(f); e.target.value=''; };
+  }
+};
